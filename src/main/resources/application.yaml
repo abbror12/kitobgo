@@ -11,3 +11,14 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+app:
+  jwt:
+    # Ishlab chiqarishda (production) bu qiymatni environment variable orqali bering!
+    secret: ${JWT_SECRET:kitobgo-super-secret-key-change-in-production-min-32-chars}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # 24 soat
+  admin:
+    # Birinchi ADMIN akkaunt (agar bazada bironta ADMIN bo'lmasa yaratiladi)
+    phone: ${ADMIN_PHONE:+998900000000}
+    password: ${ADMIN_PASSWORD:admin123}
+    name: ${ADMIN_NAME:Super Admin}
