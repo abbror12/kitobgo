@@ -1,9 +1,9 @@
 package com.example.kitobgo.order.dto;
 
-import java.util.UUID;
+import java.util.List;
 
 public record OrderRequestDto(
-        UUID productId,
+        List<OrderItemRequest> items,
         String customerName,
         String customerPhone,
         String address

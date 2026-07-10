@@ -2,6 +2,7 @@ package com.example.kitobgo.order;
 
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.order.assignment.OperatorAssignmentStrategy;
+import com.example.kitobgo.order.dto.OrderItemRequest;
 import com.example.kitobgo.order.dto.OrderRequestDto;
 import com.example.kitobgo.order.dto.OrderResponseDto;
 import com.example.kitobgo.product.Product;
@@ -24,27 +25,51 @@ public class OrderService {
 
     @Transactional
     public OrderResponseDto create(OrderRequestDto dto) {
-        Product product = productRepository.findById(dto.productId())
-                .orElseThrow(() -> new NotFoundException("Mahsulot topilmadi: " + dto.productId()));
+        if (dto.items() == null || dto.items().isEmpty()) {
+            throw new IllegalArgumentException("Buyurtmada kamida bitta mahsulot bo'lishi kerak");
+        }
 
         User operator = operatorAssignmentStrategy.assignOperator();
 
         Order order = Order.builder()
                 .operator(operator)
-                .product(product)
                 .customerName(dto.customerName())
                 .customerPhone(dto.customerPhone())
                 .address(dto.address())
                 .status(OrderStatus.NEW)
                 .build();
 
+        for (OrderItemRequest itemReq : dto.items()) {
+            Product product = productRepository.findById(itemReq.productId())
+                    .orElseThrow(() -> new NotFoundException("Mahsulot topilmadi: " + itemReq.productId()));
+
+            int quantity = itemReq.quantity() != null ? itemReq.quantity() : 1;
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("Miqdor musbat bo'lishi kerak: " + product.getTitle());
+            }
+
+            OrderItem item = OrderItem.builder()
+                    .product(product)
+                    .quantity(quantity)
+                    .priceAtPurchase(effectivePrice(product))
+                    .build();
+            order.addItem(item);
+        }
+
         Order saved = orderRepository.save(order);
         return OrderResponseDto.from(saved);
     }
 
+    /** Mahsulotning haqiqiy narxi: chegirma bo'lsa chegirma narxi, aks holda asl narx. */
+    private Integer effectivePrice(Product product) {
+        Integer price = product.getPrice();
+        Integer discount = product.getDiscountPrice();
+        return (discount != null && price != null && discount < price) ? discount : price;
+    }
+
     @Transactional(readOnly = true)
     public OrderResponseDto getById(UUID id) {
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + id));
         return OrderResponseDto.from(order);
     }

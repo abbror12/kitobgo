@@ -1,7 +1,6 @@
 package com.example.kitobgo.product.dto;
 
 import com.example.kitobgo.product.Product;
-import com.example.kitobgo.product.ProductImage;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +18,7 @@ public record ProductResponseDto(
         Integer publishedYear,
         Integer stockQuantity,
         boolean inStock,
-        List<String> images
+        List<ProductImageResponseDto> images
 ) {
     public static ProductResponseDto from(Product product) {
         Integer stock = product.getStockQuantity();
@@ -41,7 +40,7 @@ public record ProductResponseDto(
                 stock,
                 stock != null && stock > 0,
                 product.getImages().stream()
-                        .map(ProductImage::getUrl)
+                        .map(ProductImageResponseDto::from)
                         .toList()
         );
     }

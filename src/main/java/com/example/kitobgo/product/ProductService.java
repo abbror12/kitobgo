@@ -1,10 +1,14 @@
 package com.example.kitobgo.product;
 
 import com.example.kitobgo.common.NotFoundException;
+import com.example.kitobgo.common.PagedResponse;
 import com.example.kitobgo.product.dto.ProductRequestDto;
 import com.example.kitobgo.product.dto.ProductResponseDto;
 import com.example.kitobgo.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,6 +64,32 @@ public class ProductService {
     }
 
     /**
+     * Berilgan rasmni birinchi (muqova) qilib qo'yadi va qolganlarini qayta tartiblaydi.
+     */
+    @Transactional
+    public ProductResponseDto makeImagePrimary(UUID productId, UUID imageId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
+
+        List<ProductImage> images = product.getImages();   // sortOrder bo'yicha tartiblangan
+        boolean exists = images.stream().anyMatch(img -> img.getId().equals(imageId));
+        if (!exists) {
+            throw new NotFoundException("Image not found: " + imageId);
+        }
+
+        int order = 1;
+        for (ProductImage img : images) {
+            if (img.getId().equals(imageId)) {
+                img.setSortOrder(0);          // tanlangan rasm — birinchi
+            } else {
+                img.setSortOrder(order++);    // qolganlari mavjud tartibda 1, 2, ...
+            }
+        }
+
+        return ProductResponseDto.from(productRepository.save(product));
+    }
+
+    /**
      * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi.
      */
     @Transactional
@@ -81,5 +111,27 @@ public class ProductService {
         return productRepository.findAll().stream()
                 .map(ProductResponseDto::from)
                 .toList();
+    }
+
+    /**
+     * Kalit so'z va filtrlar bo'yicha sahifalangan qidiruv.
+     * Barcha filtrlar ixtiyoriy (null bo'lsa e'tiborsiz qoldiriladi).
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<ProductResponseDto> search(
+            String q,
+            Integer minPrice,
+            Integer maxPrice,
+            Boolean inStock,
+            Boolean hasDiscount,
+            Pageable pageable) {
+
+        Specification<Product> spec =
+                ProductSpecifications.withFilters(q, minPrice, maxPrice, inStock, hasDiscount);
+
+        Page<ProductResponseDto> page = productRepository.findAll(spec, pageable)
+                .map(ProductResponseDto::from);
+
+        return PagedResponse.from(page);
     }
 }

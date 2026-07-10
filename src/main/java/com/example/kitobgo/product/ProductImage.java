@@ -20,6 +20,8 @@ public class ProductImage {
 
     private String url;
 
+    private Integer sortOrder;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;

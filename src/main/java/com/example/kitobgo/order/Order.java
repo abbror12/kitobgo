@@ -1,11 +1,12 @@
 package com.example.kitobgo.order;
 
-import com.example.kitobgo.product.Product;
 import com.example.kitobgo.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -28,9 +29,9 @@ public class Order {
     @JoinColumn(name = "courier_id")
     private User courier;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<OrderItem> items = new ArrayList<>();
 
     private String customerName;
 
@@ -49,5 +50,11 @@ public class Order {
         if (this.status == null) {
             this.status = OrderStatus.NEW;
         }
+    }
+
+    /** Buyurtma qatorini qo'shib, ikki tomonlama bog'lanishni o'rnatadi. */
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
     }
 }

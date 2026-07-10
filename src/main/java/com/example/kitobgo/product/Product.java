@@ -39,10 +39,13 @@ public class Product {
     private Integer stockQuantity;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
     @Builder.Default
     private List<ProductImage> images = new ArrayList<>();
 
+    /** Rasmni qo'shadi va navbatdagi sortOrder ni beradi (birinchi rasm = 0). */
     public void addImage(ProductImage image) {
+        image.setSortOrder(images.size());
         images.add(image);
         image.setProduct(this);
     }

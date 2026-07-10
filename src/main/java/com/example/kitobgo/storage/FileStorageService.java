@@ -11,15 +11,7 @@ import java.nio.file.Paths;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Yuklangan fayllarni lokal diskka saqlaydigan servis.
- *
- * <p>Fayl {@code app.upload.dir} papkasiga tasodifiy nom bilan saqlanadi va uni
- * ochish uchun nisbiy URL (masalan {@code /uploads/<uuid>.jpg}) qaytariladi.
- *
- * <p>Production/marketplace uchun faqat shu klass ichini MinIO/S3 ga almashtirish
- * kifoya — qolgan kod (service, controller) o'zgarmaydi.
- */
+
 @Service
 public class FileStorageService {
 
@@ -42,11 +34,6 @@ public class FileStorageService {
         }
     }
 
-    /**
-     * Faylni saqlaydi va uni ochish uchun nisbiy URL qaytaradi.
-     *
-     * @return masalan {@code /uploads/3f2a...c1.jpg}
-     */
     public String store(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Fayl bo'sh");

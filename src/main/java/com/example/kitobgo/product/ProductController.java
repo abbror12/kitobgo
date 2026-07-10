@@ -1,8 +1,11 @@
 package com.example.kitobgo.product;
 
+import com.example.kitobgo.common.PagedResponse;
 import com.example.kitobgo.product.dto.ProductRequestDto;
 import com.example.kitobgo.product.dto.ProductResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.addImages(id, files));
     }
 
+    /** Berilgan rasmni birinchi (muqova) qilib qo'yadi. */
+    @PutMapping("/{id}/images/{imageId}/primary")
+    public ResponseEntity<ProductResponseDto> makeImagePrimary(
+            @PathVariable UUID id,
+            @PathVariable UUID imageId) {
+        return ResponseEntity.ok(productService.makeImagePrimary(id, imageId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(productService.getById(id));
@@ -40,6 +51,18 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> getAll() {
         return ResponseEntity.ok(productService.getAll());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponse<ProductResponseDto>> search(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Integer minPrice,
+            @RequestParam(required = false) Integer maxPrice,
+            @RequestParam(required = false) Boolean inStock,
+            @RequestParam(required = false) Boolean hasDiscount,
+            @PageableDefault(size = 12, sort = "title") Pageable pageable) {
+        return ResponseEntity.ok(
+                productService.search(q, minPrice, maxPrice, inStock, hasDiscount, pageable));
     }
 
     @DeleteMapping("/{id}")
