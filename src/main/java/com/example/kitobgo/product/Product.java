@@ -3,6 +3,8 @@ package com.example.kitobgo.product;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -19,7 +21,26 @@ public class Product {
 
     private String name;
 
+    private String title;
+
+    private String author;
+
     private Integer price;
 
+    private Float rating;
+
+    private Integer pageCount;
+
+    private Integer publishedYear;
+
     private Integer stockQuantity;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProductImage> images = new ArrayList<>();
+
+    public void addImage(ProductImage image) {
+        images.add(image);
+        image.setProduct(this);
+    }
 }

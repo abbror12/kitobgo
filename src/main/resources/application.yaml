@@ -11,14 +11,27 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 5MB        # bitta faylning maksimal hajmi
+      max-request-size: 25MB    # bitta so'rovdagi barcha fayllar yig'indisi
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html          # Swagger UI manzili
+    operations-sorter: method       # endpointlarni HTTP metod bo'yicha tartiblash
+    tags-sorter: alpha              # teglarni alifbo bo'yicha
+  api-docs:
+    path: /v3/api-docs              # OpenAPI JSON manzili
 
 app:
+  upload:
+    dir: ${UPLOAD_DIR:uploads}   # yuklangan fayllar saqlanadigan papka
   jwt:
     # Ishlab chiqarishda (production) bu qiymatni environment variable orqali bering!
     secret: ${JWT_SECRET:kitobgo-super-secret-key-change-in-production-min-32-chars}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # 24 soat
   admin:
-    # Birinchi ADMIN akkaunt (agar bazada bironta ADMIN bo'lmasa yaratiladi)
     phone: ${ADMIN_PHONE:+998900000000}
     password: ${ADMIN_PASSWORD:admin123}
     name: ${ADMIN_NAME:Super Admin}

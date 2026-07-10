@@ -7,10 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-/**
- * Telefon raqami bo'yicha foydalanuvchini yuklab, {@link UserPrincipal} ga o'raydi.
- * Spring Security login jarayonida shu servisdan foydalanadi.
- */
+
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {

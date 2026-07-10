@@ -27,7 +27,6 @@ public class OrderService {
         Product product = productRepository.findById(dto.productId())
                 .orElseThrow(() -> new NotFoundException("Mahsulot topilmadi: " + dto.productId()));
 
-        // Operatorni frontend emas, backend o'zi navbatma-navbat biriktiradi.
         User operator = operatorAssignmentStrategy.assignOperator();
 
         Order order = Order.builder()

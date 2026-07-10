@@ -13,10 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * Har bir so'rovda "Authorization: Bearer &lt;token&gt;" sarlavhasini o'qib,
- * token haqiqiy bo'lsa foydalanuvchini {@link SecurityContextHolder} ga joylaydi.
- */
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

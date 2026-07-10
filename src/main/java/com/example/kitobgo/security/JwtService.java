@@ -12,10 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
 
-/**
- * JWT tokenlarini yaratish va tekshirish uchun mas'ul.
- * Faqat token bilan ishlaydi — foydalanuvchi/rol biznes logikasini bilmaydi (SRP).
- */
 @Service
 public class JwtService {
 
@@ -24,18 +20,15 @@ public class JwtService {
 
     public JwtService(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs
-    ) {
+            @Value("${app.jwt.expiration-ms}") long expirationMs) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
 
-    /** Token ichidan foydalanuvchi nomini (telefon) oladi. */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    /** Foydalanuvchi uchun yangi token yaratadi. */
     public String generateToken(UserDetails userDetails) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
@@ -48,7 +41,6 @@ public class JwtService {
                 .compact();
     }
 
-    /** Token haqiqiy (egasiga mos va muddati o'tmagan) ekanini tekshiradi. */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isExpired(token);

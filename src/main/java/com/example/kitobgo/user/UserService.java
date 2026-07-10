@@ -17,10 +17,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Yangi foydalanuvchi qo'shadi (operator/kuryer/admin). Faqat ADMIN chaqira oladi
-     * (SecurityConfig'da cheklangan). Parol ochiq saqlanmaydi — BCrypt bilan hash qilinadi.
-     */
     @Transactional
     public UserResponse create(CreateUserRequest request) {
         userRepository.findByPhone(request.phone()).ifPresent(existing -> {
