@@ -4,6 +4,9 @@ build/
 
 ### Uploaded files (local storage) ###
 uploads/
+
+### Local docs (commit qilinmaydi) ###
+docs/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
