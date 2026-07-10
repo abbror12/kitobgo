@@ -1,5 +1,6 @@
 package com.example.kitobgo.order;
 
+import com.example.kitobgo.common.ConflictException;
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.order.assignment.OperatorAssignmentStrategy;
 import com.example.kitobgo.order.dto.OrderItemRequest;
@@ -47,6 +48,16 @@ public class OrderService {
             if (quantity <= 0) {
                 throw new IllegalArgumentException("Miqdor musbat bo'lishi kerak: " + product.getTitle());
             }
+
+            // Zaxirani tekshirish va kamaytirish. product managed obyekt bo'lgani uchun
+            // stockQuantity o'zgarishi transaksiya yakunida avtomatik saqlanadi (dirty checking).
+            Integer stock = product.getStockQuantity();
+            int available = stock != null ? stock : 0;
+            if (available < quantity) {
+                throw new ConflictException("Yetarli zaxira yo'q: " + product.getTitle()
+                        + " (mavjud: " + available + ", so'ralgan: " + quantity + ")");
+            }
+            product.setStockQuantity(available - quantity);
 
             OrderItem item = OrderItem.builder()
                     .product(product)

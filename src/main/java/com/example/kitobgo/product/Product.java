@@ -19,6 +19,15 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /**
+     * Optimistik lock versiyasi. Hibernate avtomatik boshqaradi: har UPDATE'da
+     * oshiriladi va WHERE shartiga qo'shiladi. Bir vaqtda ikki so'rov bir kitobni
+     * o'zgartirsa, kechikkanida OptimisticLockException otiladi (masalan zaxira
+     * bir vaqtda kamaytirilganda oversell'ning oldini oladi).
+     */
+    @Version
+    private Long version;
+
     private String title;
 
     private String description;
