@@ -8,27 +8,38 @@ import java.util.UUID;
 
 public record ProductResponseDto(
         UUID id,
-        String name,
         String title,
+        String description,
         String author,
         Integer price,
+        Integer discountPrice,
+        boolean hasDiscount,
         Float rating,
         Integer pageCount,
         Integer publishedYear,
         Integer stockQuantity,
+        boolean inStock,
         List<String> images
 ) {
     public static ProductResponseDto from(Product product) {
+        Integer stock = product.getStockQuantity();
+        Integer price = product.getPrice();
+        Integer discountPrice = product.getDiscountPrice();
+        // Chegirma bor: chegirma narxi kiritilgan va asl narxdan past bo'lsa.
+        boolean hasDiscount = discountPrice != null && price != null && discountPrice < price;
         return new ProductResponseDto(
                 product.getId(),
-                product.getName(),
                 product.getTitle(),
+                product.getDescription(),
                 product.getAuthor(),
-                product.getPrice(),
+                price,
+                discountPrice,
+                hasDiscount,
                 product.getRating(),
                 product.getPageCount(),
                 product.getPublishedYear(),
-                product.getStockQuantity(),
+                stock,
+                stock != null && stock > 0,
                 product.getImages().stream()
                         .map(ProductImage::getUrl)
                         .toList()

@@ -22,10 +22,11 @@ public class ProductService {
     @Transactional
     public ProductResponseDto create(ProductRequestDto dto) {
         Product product = Product.builder()
-                .name(dto.name())
                 .title(dto.title())
+                .description(dto.description())
                 .author(dto.author())
                 .price(dto.price())
+                .discountPrice(dto.discountPrice())
                 .pageCount(dto.pageCount())
                 .publishedYear(dto.publishedYear())
                 .stockQuantity(dto.stockQuantity())
@@ -56,6 +57,16 @@ public class ProductService {
         }
 
         return ProductResponseDto.from(productRepository.save(product));
+    }
+
+    /**
+     * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi.
+     */
+    @Transactional
+    public void delete(UUID id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book not found: " + id));
+        productRepository.delete(product);
     }
 
     @Transactional(readOnly = true)

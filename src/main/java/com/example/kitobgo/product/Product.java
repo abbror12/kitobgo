@@ -19,15 +19,18 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String name;
-
     private String title;
+
+    private String description;
 
     private String author;
 
     private Integer price;
 
-    private Float rating;
+    private Integer discountPrice;
+
+    @Builder.Default
+    private Float rating = 0.0f;
 
     private Integer pageCount;
 
