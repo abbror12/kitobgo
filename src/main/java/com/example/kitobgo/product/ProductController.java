@@ -1,6 +1,7 @@
 package com.example.kitobgo.product;
 
 import com.example.kitobgo.common.PagedResponse;
+import com.example.kitobgo.product.dto.DiscountRequestDto;
 import com.example.kitobgo.product.dto.ProductRequestDto;
 import com.example.kitobgo.product.dto.ProductResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,22 @@ public class ProductController {
             @PathVariable UUID id,
             @RequestParam("files") List<MultipartFile> files) {
         return ResponseEntity.ok(productService.addImages(id, files));
+    }
+
+    /** Kitobning asosiy maydonlarini to'liq yangilaydi (rasmlardan tashqari). */
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponseDto> update(
+            @PathVariable UUID id,
+            @RequestBody ProductRequestDto requestDto) {
+        return ResponseEntity.ok(productService.update(id, requestDto));
+    }
+
+    /** Kitobga chegirma qo'yadi yoki (discountPrice=null bilan) olib tashlaydi. */
+    @PatchMapping("/{id}/discount")
+    public ResponseEntity<ProductResponseDto> setDiscount(
+            @PathVariable UUID id,
+            @RequestBody DiscountRequestDto requestDto) {
+        return ResponseEntity.ok(productService.setDiscount(id, requestDto.discountPrice()));
     }
 
     /** Berilgan rasmni birinchi (muqova) qilib qo'yadi. */

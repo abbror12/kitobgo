@@ -46,6 +46,57 @@ public class ProductService {
     }
 
     /**
+     * Kitobning asosiy maydonlarini to'liq yangilaydi (PUT semantikasi).
+     * Rasmlar bu yerda o'zgartirilmaydi — ular alohida endpointlar orqali boshqariladi.
+     */
+    @Transactional
+    public ProductResponseDto update(UUID id, ProductRequestDto dto) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book not found: " + id));
+
+        validateDiscount(dto.price(), dto.discountPrice());
+
+        product.setTitle(dto.title());
+        product.setDescription(dto.description());
+        product.setAuthor(dto.author());
+        product.setPrice(dto.price());
+        product.setDiscountPrice(dto.discountPrice());
+        product.setPageCount(dto.pageCount());
+        product.setPublishedYear(dto.publishedYear());
+        product.setStockQuantity(dto.stockQuantity());
+
+        return ProductResponseDto.from(productRepository.save(product));
+    }
+
+    /**
+     * Kitobga chegirma qo'yadi yoki olib tashlaydi (PATCH semantikasi).
+     * {@code discountPrice == null} bo'lsa chegirma olib tashlanadi.
+     */
+    @Transactional
+    public ProductResponseDto setDiscount(UUID id, Integer discountPrice) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book not found: " + id));
+
+        validateDiscount(product.getPrice(), discountPrice);
+
+        product.setDiscountPrice(discountPrice);
+        return ProductResponseDto.from(productRepository.save(product));
+    }
+
+    /** Chegirma narxi to'g'riligini tekshiradi (null = chegirma yo'q, ruxsat etiladi). */
+    private void validateDiscount(Integer price, Integer discountPrice) {
+        if (discountPrice == null) {
+            return;
+        }
+        if (discountPrice <= 0) {
+            throw new IllegalArgumentException("Chegirma narxi musbat bo'lishi kerak");
+        }
+        if (price == null || discountPrice >= price) {
+            throw new IllegalArgumentException("Chegirma narxi asl narxdan past bo'lishi kerak");
+        }
+    }
+
+    /**
      * Kitobga bir yoki bir nechta rasm faylini yuklab biriktiradi.
      */
     @Transactional
