@@ -12,21 +12,21 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    /** Buyurtmalarni items va ularning mahsuloti bilan birga (N+1 siz) yuklaydi. */
+    /** Buyurtmalarni items, mahsulot, operator va kuryer bilan birga (N+1 siz) yuklaydi. */
     @Override
-    @EntityGraph(attributePaths = {"items", "items.product"})
+    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier"})
     List<Order> findAll();
 
-    /** Bitta buyurtmani items va mahsuloti bilan birga (N+1 siz) yuklaydi. */
-    @EntityGraph(attributePaths = {"items", "items.product"})
+    /** Bitta buyurtmani items, mahsulot, operator va kuryer bilan birga (N+1 siz) yuklaydi. */
+    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier"})
     Optional<Order> findWithItemsById(UUID id);
 
     /** Operatorga biriktirilgan buyurtmalar (mobil ilova — "mening buyurtmalarim"). */
-    @EntityGraph(attributePaths = {"items", "items.product"})
+    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier"})
     List<Order> findByOperatorIdOrderByCreatedAtDesc(UUID operatorId);
 
     /** Kuryerga biriktirilgan buyurtmalar (mobil ilova — "mening yetkazishlarim"). */
-    @EntityGraph(attributePaths = {"items", "items.product"})
+    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier"})
     List<Order> findByCourierIdOrderByCreatedAtDesc(UUID courierId);
 
     /** Egasiz (operatorsiz) buyurtmalar hovuzi — eskidan yangiga (FIFO taqsimot uchun). */

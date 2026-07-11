@@ -1,13 +1,12 @@
 package com.example.kitobgo.order.assignment;
 
+import com.example.kitobgo.presence.Availability;
 import com.example.kitobgo.user.Role;
 import com.example.kitobgo.user.User;
 import com.example.kitobgo.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,17 +24,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RoundRobinOperatorAssignmentStrategy implements OperatorAssignmentStrategy {
 
     private final UserRepository userRepository;
+    private final Availability availability;
     private final AtomicInteger nextIndex = new AtomicInteger(0);
-
-    /** Heartbeat timeout (soniya): shundan uzoq signal bermagan operator "mavjud emas". */
-    @Value("${app.operator.heartbeat-timeout-seconds:120}")
-    private long heartbeatTimeoutSeconds;
 
     @Override
     public User assignOperator() {
-        LocalDateTime threshold = LocalDateTime.now().minusSeconds(heartbeatTimeoutSeconds);
         List<User> operators = userRepository
-                .findByRoleAndOnlineTrueAndLastSeenAtAfterOrderByCreatedAtAscIdAsc(Role.OPERATOR, threshold);
+                .findByRoleAndOnlineTrueAndLastSeenAtAfterOrderByCreatedAtAscIdAsc(
+                        Role.OPERATOR, availability.threshold());
 
         if (operators.isEmpty()) {
             return null;   // hech qanday mavjud operator yo'q — buyurtma hovuzda kutadi

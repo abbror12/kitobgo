@@ -19,8 +19,9 @@ import java.util.UUID;
  * (xavfsizlik konfiguratsiyasida gate qilingan) va faqat o'ziga biriktirilgan
  * yetkazishlarni ko'radi.
  * <p>
- * Statusni o'zgartirish umumiy endpoint orqali: {@code PATCH /api/orders/{id}/status}
- * (egalik OrderService'da tekshiriladi).
+ * Kuryerga buyurtmani admin/operator qo'lda biriktiradi
+ * ({@code PATCH /api/orders/{id}/courier}). Statusni o'zgartirish umumiy endpoint
+ * orqali: {@code PATCH /api/orders/{id}/status} (egalik OrderService'da tekshiriladi).
  */
 @RestController
 @RequestMapping("/api/courier")

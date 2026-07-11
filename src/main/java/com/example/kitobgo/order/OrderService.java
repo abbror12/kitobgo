@@ -7,6 +7,7 @@ import com.example.kitobgo.order.assignment.OperatorAssignmentStrategy;
 import com.example.kitobgo.order.dto.OrderItemRequest;
 import com.example.kitobgo.order.dto.OrderRequestDto;
 import com.example.kitobgo.order.dto.OrderResponseDto;
+import com.example.kitobgo.presence.Availability;
 import com.example.kitobgo.product.Product;
 import com.example.kitobgo.product.ProductRepository;
 import com.example.kitobgo.user.Role;
@@ -28,6 +29,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final OperatorAssignmentStrategy operatorAssignmentStrategy;
+    private final Availability availability;
 
     @Transactional
     public OrderResponseDto create(OrderRequestDto dto) {
@@ -96,7 +98,20 @@ public class OrderService {
         assertCanManage(order, actor);
 
         order.setStatus(newStatus);
+        stampStatusTime(order, newStatus);
         return OrderResponseDto.from(orderRepository.save(order));
+    }
+
+    /** Status o'zgarganda tegishli vaqt maydonini to'ldiradi (NEW uchun createdAt yetarli). */
+    private void stampStatusTime(Order order, OrderStatus status) {
+        LocalDateTime now = LocalDateTime.now();
+        switch (status) {
+            case CONFIRMED -> order.setConfirmedAt(now);
+            case IN_DELIVERY -> order.setInDeliveryAt(now);
+            case DELIVERED -> order.setDeliveredAt(now);
+            case RETURNED -> order.setReturnedAt(now);
+            case NEW -> { /* boshlang'ich holat — createdAt yetarli */ }
+        }
     }
 
     /**
@@ -135,11 +150,11 @@ public class OrderService {
      * </ol>
      * Bu offline'ni ham, ilova qulab tushgan (heartbeat eskirgan) holatni ham qamraydi —
      * kimdir faol bo'lsa, egasiz buyurtmalar qayta taqsimlanadi.
-     *
-     * @param threshold shundan eski heartbeat "mavjud emas" hisoblanadi
      */
     @Transactional
-    public void rebalance(LocalDateTime threshold) {
+    public void rebalance() {
+        LocalDateTime threshold = availability.threshold();
+
         // 1) Mavjud bo'lmagan operatorlarning NEW buyurtmalarini hovuzga qaytar.
         orderRepository.findNewOrdersOfUnavailableOperators(OrderStatus.NEW, threshold)
                 .forEach(order -> order.setOperator(null));

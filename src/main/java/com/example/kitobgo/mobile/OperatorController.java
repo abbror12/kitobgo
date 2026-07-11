@@ -3,6 +3,7 @@ package com.example.kitobgo.mobile;
 import com.example.kitobgo.mobile.dto.OnlineStatusRequest;
 import com.example.kitobgo.order.OrderService;
 import com.example.kitobgo.order.dto.OrderResponseDto;
+import com.example.kitobgo.presence.PresenceService;
 import com.example.kitobgo.security.UserPrincipal;
 import com.example.kitobgo.user.dto.UserResponse;
 import jakarta.validation.Valid;
@@ -35,7 +36,7 @@ import java.util.UUID;
 public class OperatorController {
 
     private final OrderService orderService;
-    private final OperatorPresenceService presenceService;
+    private final PresenceService presenceService;
 
     /**
      * Ishni boshlash/tugatish — operatorni online/offline qiladi.

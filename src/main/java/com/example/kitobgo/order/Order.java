@@ -42,6 +42,12 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    /** Status o'zgargan vaqtlar — tegishli statusга o'tganda avtomatik to'ldiriladi. */
+    private LocalDateTime confirmedAt;
+    private LocalDateTime inDeliveryAt;
+    private LocalDateTime deliveredAt;
+    private LocalDateTime returnedAt;
+
     private LocalDateTime createdAt;
 
     @PrePersist

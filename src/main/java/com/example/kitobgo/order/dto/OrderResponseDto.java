@@ -10,15 +10,19 @@ import java.util.UUID;
 
 public record OrderResponseDto(
         UUID id,
-        UUID operatorId,
-        UUID courierId,
+        OrderAssignee operator,   // biriktirilgan operator (id + ism + telefon), yoki null
+        OrderAssignee courier,    // biriktirilgan kuryer (id + ism + telefon), yoki null
         List<OrderItemResponse> items,
         Integer totalPrice,
         String customerName,
         String customerPhone,
         String address,
         OrderStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime confirmedAt,
+        LocalDateTime inDeliveryAt,
+        LocalDateTime deliveredAt,
+        LocalDateTime returnedAt
 ) {
     public static OrderResponseDto from(Order order) {
         List<OrderItemResponse> items = order.getItems().stream()
@@ -32,15 +36,19 @@ public record OrderResponseDto(
 
         return new OrderResponseDto(
                 order.getId(),
-                order.getOperator() != null ? order.getOperator().getId() : null,
-                order.getCourier() != null ? order.getCourier().getId() : null,
+                OrderAssignee.from(order.getOperator()),
+                OrderAssignee.from(order.getCourier()),
                 items,
                 totalPrice,
                 order.getCustomerName(),
                 order.getCustomerPhone(),
                 order.getAddress(),
                 order.getStatus(),
-                order.getCreatedAt()
+                order.getCreatedAt(),
+                order.getConfirmedAt(),
+                order.getInDeliveryAt(),
+                order.getDeliveredAt(),
+                order.getReturnedAt()
         );
     }
 }
