@@ -17,4 +17,12 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     /** Bitta buyurtmani items va mahsuloti bilan birga (N+1 siz) yuklaydi. */
     @EntityGraph(attributePaths = {"items", "items.product"})
     Optional<Order> findWithItemsById(UUID id);
+
+    /** Operatorga biriktirilgan buyurtmalar (mobil ilova — "mening buyurtmalarim"). */
+    @EntityGraph(attributePaths = {"items", "items.product"})
+    List<Order> findByOperatorIdOrderByCreatedAtDesc(UUID operatorId);
+
+    /** Kuryerga biriktirilgan buyurtmalar (mobil ilova — "mening yetkazishlarim"). */
+    @EntityGraph(attributePaths = {"items", "items.product"})
+    List<Order> findByCourierIdOrderByCreatedAtDesc(UUID courierId);
 }

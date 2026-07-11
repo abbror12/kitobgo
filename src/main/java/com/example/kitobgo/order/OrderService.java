@@ -1,6 +1,7 @@
 package com.example.kitobgo.order;
 
 import com.example.kitobgo.common.ConflictException;
+import com.example.kitobgo.common.ForbiddenException;
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.order.assignment.OperatorAssignmentStrategy;
 import com.example.kitobgo.order.dto.OrderItemRequest;
@@ -8,7 +9,9 @@ import com.example.kitobgo.order.dto.OrderRequestDto;
 import com.example.kitobgo.order.dto.OrderResponseDto;
 import com.example.kitobgo.product.Product;
 import com.example.kitobgo.product.ProductRepository;
+import com.example.kitobgo.user.Role;
 import com.example.kitobgo.user.User;
+import com.example.kitobgo.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
     private final OperatorAssignmentStrategy operatorAssignmentStrategy;
 
     @Transactional
@@ -78,10 +82,72 @@ public class OrderService {
         return (discount != null && price != null && discount < price) ? discount : price;
     }
 
+    /**
+     * Buyurtma statusini o'zgartiradi (erkin o'tish — har qanday statusga).
+     * Ruxsat: ADMIN/SUPER_ADMIN har qanday buyurtmani; OPERATOR/COURIER faqat
+     * o'ziga biriktirilgan buyurtmani boshqara oladi.
+     */
+    @Transactional
+    public OrderResponseDto changeStatus(UUID orderId, OrderStatus newStatus, User actor) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + orderId));
+
+        assertCanManage(order, actor);
+
+        order.setStatus(newStatus);
+        return OrderResponseDto.from(orderRepository.save(order));
+    }
+
+    /**
+     * Buyurtmaga kuryer biriktiradi.
+     * Ruxsat: ADMIN/SUPER_ADMIN har qanday buyurtmaga; biriktirilgan OPERATOR o'z buyurtmasiga.
+     */
+    @Transactional
+    public OrderResponseDto assignCourier(UUID orderId, UUID courierId, User actor) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + orderId));
+
+        assertCanAssignCourier(order, actor);
+
+        User courier = userRepository.findById(courierId)
+                .orElseThrow(() -> new NotFoundException("Kuryer topilmadi: " + courierId));
+        if (courier.getRole() != Role.COURIER) {
+            throw new IllegalArgumentException("Tanlangan foydalanuvchi kuryer emas");
+        }
+
+        order.setCourier(courier);
+        return OrderResponseDto.from(orderRepository.save(order));
+    }
+
     @Transactional(readOnly = true)
     public OrderResponseDto getById(UUID id) {
         Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + id));
+        return OrderResponseDto.from(order);
+    }
+
+    /** Operatorning o'ziga biriktirilgan buyurtmalari (mobil ilova). */
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getMyOperatorOrders(User actor) {
+        return orderRepository.findByOperatorIdOrderByCreatedAtDesc(actor.getId()).stream()
+                .map(OrderResponseDto::from)
+                .toList();
+    }
+
+    /** Kuryerning o'ziga biriktirilgan buyurtmalari (mobil ilova). */
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getMyCourierOrders(User actor) {
+        return orderRepository.findByCourierIdOrderByCreatedAtDesc(actor.getId()).stream()
+                .map(OrderResponseDto::from)
+                .toList();
+    }
+
+    /** Bitta buyurtma — faqat unga biriktirilgan operator/kuryer (yoki admin) ko'ra oladi. */
+    @Transactional(readOnly = true)
+    public OrderResponseDto getMyOrder(UUID orderId, User actor) {
+        Order order = orderRepository.findWithItemsById(orderId)
+                .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + orderId));
+        assertCanManage(order, actor);
         return OrderResponseDto.from(order);
     }
 
@@ -90,5 +156,38 @@ public class OrderService {
         return orderRepository.findAll().stream()
                 .map(OrderResponseDto::from)
                 .toList();
+    }
+
+    // --- Ruxsat tekshiruvi ---
+
+    /** Statusni o'zgartira oladimi: admin — har doim; operator/kuryer — faqat o'z buyurtmasi. */
+    private void assertCanManage(Order order, User actor) {
+        Role role = actor.getRole();
+        if (role == Role.ADMIN || role == Role.SUPER_ADMIN) {
+            return;
+        }
+        if (role == Role.OPERATOR && isSameUser(order.getOperator(), actor)) {
+            return;
+        }
+        if (role == Role.COURIER && isSameUser(order.getCourier(), actor)) {
+            return;
+        }
+        throw new ForbiddenException("Bu buyurtmani boshqarishga ruxsatingiz yo'q");
+    }
+
+    /** Kuryer biriktira oladimi: admin — har doim; biriktirilgan operator — o'z buyurtmasi. */
+    private void assertCanAssignCourier(Order order, User actor) {
+        Role role = actor.getRole();
+        if (role == Role.ADMIN || role == Role.SUPER_ADMIN) {
+            return;
+        }
+        if (role == Role.OPERATOR && isSameUser(order.getOperator(), actor)) {
+            return;
+        }
+        throw new ForbiddenException("Bu buyurtmaga kuryer biriktirishga ruxsatingiz yo'q");
+    }
+
+    private boolean isSameUser(User assigned, User actor) {
+        return assigned != null && assigned.getId().equals(actor.getId());
     }
 }

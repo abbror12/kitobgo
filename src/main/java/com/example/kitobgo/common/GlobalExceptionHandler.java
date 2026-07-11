@@ -58,6 +58,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
     }
 
+    /** Amalga huquq yo'q (masalan boshqa operatorning buyurtmasi) — 403. */
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, String>> handleForbidden(ForbiddenException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", ex.getMessage()));
+    }
+
     /**
      * Optimistik lock konflikti — bir yozuvni ikki so'rov bir vaqtda o'zgartirganda — 409.
      * (Masalan zaxira bir vaqtda kamaytirilganda.)

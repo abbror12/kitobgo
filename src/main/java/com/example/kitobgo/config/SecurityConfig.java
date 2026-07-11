@@ -69,6 +69,12 @@ public class SecurityConfig {
                         // Buyurtmalarni ko'rish — faqat admin sayti (ADMIN + SUPER_ADMIN).
                         // COURIER/OPERATOR admin saytiga kira olmaydi; ular alohida mobil ilovadan foydalanadi.
                         .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("ADMIN")
+                        // Status/kuryer o'zgartirish — istalgan tizimga kirgan foydalanuvchi HTTP darajasida
+                        // o'tadi; aniq rol va "o'z buyurtmasi" tekshiruvi OrderService'da bajariladi.
+                        .requestMatchers(HttpMethod.PATCH, "/api/orders/**").authenticated()
+                        // Mobil ilova endpointlari — har rol o'z namespace'ida.
+                        .requestMatchers("/api/operator/**").hasRole("OPERATOR")
+                        .requestMatchers("/api/courier/**").hasRole("COURIER")
                         .requestMatchers("/api/users/**").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
