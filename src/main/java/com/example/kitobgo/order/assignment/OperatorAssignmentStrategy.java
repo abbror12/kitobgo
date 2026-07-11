@@ -13,9 +13,11 @@ import com.example.kitobgo.user.User;
 public interface OperatorAssignmentStrategy {
 
     /**
-     * Navbatdagi buyurtma uchun operatorni tanlaydi.
+     * Navbatdagi buyurtma uchun ayni damda <b>mavjud</b> (online va heartbeat'i
+     * tirik) operatorni tanlaydi.
      *
-     * @return biriktiriladigan operator
+     * @return biriktiriladigan operator, yoki hech qanday mavjud operator bo'lmasa
+     *         {@code null} (bunda buyurtma egasiz hovuzda kutadi)
      */
     User assignOperator();
 }

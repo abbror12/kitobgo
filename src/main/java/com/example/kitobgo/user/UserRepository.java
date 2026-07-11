@@ -3,6 +3,7 @@ package com.example.kitobgo.user;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,4 +13,11 @@ public interface UserRepository
     Optional<User> findByPhone(String phone);
 
     List<User> findByRoleOrderByCreatedAtAscIdAsc(Role role);
+
+    /**
+     * Ayni damda "mavjud" (online va heartbeat'i tirik) operatorlar.
+     * {@code online=true} va {@code lastSeenAt > threshold} bo'lganlar.
+     */
+    List<User> findByRoleAndOnlineTrueAndLastSeenAtAfterOrderByCreatedAtAscIdAsc(
+            Role role, LocalDateTime threshold);
 }

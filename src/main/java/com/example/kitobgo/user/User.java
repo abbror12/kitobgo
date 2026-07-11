@@ -28,6 +28,20 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    /**
+     * Operator/kuryer online holati — mobil ilova toggle qiladi (ishni boshlash/tugatish).
+     * {@code null}/{@code false} = offline. Buyurtma faqat online (va heartbeat'i tirik)
+     * operatorlarga taqsimlanadi.
+     */
+    @Builder.Default
+    private Boolean online = false;
+
+    /**
+     * Oxirgi faollik (heartbeat) vaqti. {@code online=true} bo'lsa ham, agar lastSeenAt
+     * timeout'dan eski bo'lsa (ilova yopilib qolgan) operator "mavjud emas" hisoblanadi.
+     */
+    private LocalDateTime lastSeenAt;
+
     private LocalDateTime createdAt;
 
     @PrePersist

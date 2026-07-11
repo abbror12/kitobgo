@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,6 +125,33 @@ public class OrderService {
         Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + id));
         return OrderResponseDto.from(order);
+    }
+
+    /**
+     * Buyurtma taqsimotini qayta muvozanatlaydi (operator online/offline/heartbeat bo'lganda chaqiriladi):
+     * <ol>
+     *   <li>Mavjud bo'lmagan operatorlarning tegilmagan (NEW) buyurtmalarini egasiz hovuzga qaytaradi;</li>
+     *   <li>Hovuzdagi buyurtmalarni ayni damda mavjud operatorlarga tarqatadi.</li>
+     * </ol>
+     * Bu offline'ni ham, ilova qulab tushgan (heartbeat eskirgan) holatni ham qamraydi —
+     * kimdir faol bo'lsa, egasiz buyurtmalar qayta taqsimlanadi.
+     *
+     * @param threshold shundan eski heartbeat "mavjud emas" hisoblanadi
+     */
+    @Transactional
+    public void rebalance(LocalDateTime threshold) {
+        // 1) Mavjud bo'lmagan operatorlarning NEW buyurtmalarini hovuzga qaytar.
+        orderRepository.findNewOrdersOfUnavailableOperators(OrderStatus.NEW, threshold)
+                .forEach(order -> order.setOperator(null));
+
+        // 2) Hovuzdagilarni mavjud operatorlarga tarqat (round-robin strategiya orqali).
+        for (Order order : orderRepository.findByOperatorIsNullOrderByCreatedAtAsc()) {
+            User operator = operatorAssignmentStrategy.assignOperator();
+            if (operator == null) {
+                break;   // hozircha mavjud operator yo'q — hovuzda kutaversin
+            }
+            order.setOperator(operator);
+        }
     }
 
     /** Operatorning o'ziga biriktirilgan buyurtmalari (mobil ilova). */

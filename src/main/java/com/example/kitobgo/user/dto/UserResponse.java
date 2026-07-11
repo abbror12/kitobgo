@@ -11,6 +11,8 @@ public record UserResponse(
         String name,
         String phone,
         Role role,
+        boolean online,
+        LocalDateTime lastSeenAt,
         LocalDateTime createdAt
 ) {
     public static UserResponse from(User user) {
@@ -19,6 +21,8 @@ public record UserResponse(
                 user.getName(),
                 user.getPhone(),
                 user.getRole(),
+                Boolean.TRUE.equals(user.getOnline()),
+                user.getLastSeenAt(),
                 user.getCreatedAt()
         );
     }
