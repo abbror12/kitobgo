@@ -45,7 +45,7 @@ public class AdminSeeder implements ApplicationRunner {
                 .name(adminName)
                 .phone(adminPhone)
                 .password(passwordEncoder.encode(adminPassword))
-                .role(Role.ADMIN)
+                .role(Role.SUPER_ADMIN)
                 .build();
         userRepository.save(admin);
 
