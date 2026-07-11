@@ -43,6 +43,22 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Resurs topilmasa — 404. Javob tanasini bevosita qaytaradi (sendError'siz),
+     * shu tufayli ochiq (autentifikatsiyasiz) endpointlarda ERROR dispatch orqali
+     * xato 403 bilan niqoblanmaydi.
+     */
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    }
+
+    /** Konflikt (band telefon, zaxira yetmasligi va h.k.) — 409. */
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, String>> handleConflict(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
+    }
+
+    /**
      * Optimistik lock konflikti — bir yozuvni ikki so'rov bir vaqtda o'zgartirganda — 409.
      * (Masalan zaxira bir vaqtda kamaytirilganda.)
      */
