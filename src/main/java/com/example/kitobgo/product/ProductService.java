@@ -141,6 +141,24 @@ public class ProductService {
     }
 
     /**
+     * Kitobning bitta rasmini o'chiradi va qolganlarini qayta tartiblaydi.
+     * orphanRemoval tufayli rasm bazadan ham o'chadi.
+     */
+    @Transactional
+    public void deleteImage(UUID productId, UUID imageId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
+
+        ProductImage image = product.getImages().stream()
+                .filter(img -> img.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Image not found: " + imageId));
+
+        product.removeImage(image);
+        productRepository.save(product);
+    }
+
+    /**
      * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi.
      */
     @Transactional

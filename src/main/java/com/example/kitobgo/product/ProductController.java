@@ -82,6 +82,15 @@ public class ProductController {
                 productService.search(q, minPrice, maxPrice, inStock, hasDiscount, pageable));
     }
 
+    /** Kitobning bitta rasmini o'chiradi. */
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ResponseEntity<Void> deleteImage(
+            @PathVariable UUID id,
+            @PathVariable UUID imageId) {
+        productService.deleteImage(id, imageId);
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         productService.delete(id);

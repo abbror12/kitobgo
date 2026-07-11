@@ -58,4 +58,14 @@ public class Product {
         images.add(image);
         image.setProduct(this);
     }
+
+    /** Rasmni o'chiradi va qolganlarini 0, 1, 2, ... bo'yicha qayta tartiblaydi. */
+    public void removeImage(ProductImage image) {
+        images.remove(image);
+        image.setProduct(null);
+        int order = 0;
+        for (ProductImage img : images) {
+            img.setSortOrder(order++);
+        }
+    }
 }
