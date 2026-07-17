@@ -36,7 +36,9 @@ public class AdminSeeder implements ApplicationRunner {
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) {
-        boolean adminExists = !userRepository.findByRoleOrderByCreatedAtAscIdAsc(Role.ADMIN).isEmpty();
+        // SUPER_ADMIN ham hisobga olinadi — seeder SUPER_ADMIN yaratadi, faqat ADMIN'ni
+        // tekshirsak mavjud SUPER_ADMIN'ni ko'rmay yana yaratishga urinib crash bo'ladi.
+        boolean adminExists = userRepository.existsByRoleIn(java.util.List.of(Role.ADMIN, Role.SUPER_ADMIN));
         if (adminExists) {
             return;
         }

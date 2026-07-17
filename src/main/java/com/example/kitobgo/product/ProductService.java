@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +49,7 @@ public class ProductService {
      * Rasmlar bu yerda o'zgartirilmaydi — ular alohida endpointlar orqali boshqariladi.
      */
     @Transactional
-    public ProductResponseDto update(UUID id, ProductRequestDto dto) {
+    public ProductResponseDto update(Long id, ProductRequestDto dto) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
 
@@ -73,7 +72,7 @@ public class ProductService {
      * {@code discountPrice == null} bo'lsa chegirma olib tashlanadi.
      */
     @Transactional
-    public ProductResponseDto setDiscount(UUID id, Integer discountPrice) {
+    public ProductResponseDto setDiscount(Long id, Integer discountPrice) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
 
@@ -100,7 +99,7 @@ public class ProductService {
      * Kitobga bir yoki bir nechta rasm faylini yuklab biriktiradi.
      */
     @Transactional
-    public ProductResponseDto addImages(UUID productId, List<MultipartFile> files) {
+    public ProductResponseDto addImages(Long productId, List<MultipartFile> files) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
 
@@ -118,7 +117,7 @@ public class ProductService {
      * Berilgan rasmni birinchi (muqova) qilib qo'yadi va qolganlarini qayta tartiblaydi.
      */
     @Transactional
-    public ProductResponseDto makeImagePrimary(UUID productId, UUID imageId) {
+    public ProductResponseDto makeImagePrimary(Long productId, Long imageId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
 
@@ -145,7 +144,7 @@ public class ProductService {
      * orphanRemoval tufayli rasm bazadan ham o'chadi.
      */
     @Transactional
-    public void deleteImage(UUID productId, UUID imageId) {
+    public void deleteImage(Long productId, Long imageId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
 
@@ -162,14 +161,14 @@ public class ProductService {
      * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi.
      */
     @Transactional
-    public void delete(UUID id) {
+    public void delete(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
         productRepository.delete(product);
     }
 
     @Transactional(readOnly = true)
-    public ProductResponseDto getById(UUID id) {
+    public ProductResponseDto getById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
         return ProductResponseDto.from(product);

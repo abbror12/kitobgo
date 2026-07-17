@@ -6,11 +6,14 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      # Sxemani endi Liquibase boshqaradi (db/changelog). Hibernate faqat entity'lar
+      # bazaga mosligini tekshiradi — nomuvofiqlik bo'lsa dastur ishga tushmaydi.
+      ddl-auto: validate
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+#    properties:
+#      hibernate:
+#        format_sql: true
   servlet:
     multipart:
       max-file-size: 5MB        # bitta faylning maksimal hajmi
@@ -30,8 +33,14 @@ app:
   jwt:
     # Ishlab chiqarishda (production) bu qiymatni environment variable orqali bering!
     secret: ${JWT_SECRET:kitobgo-super-secret-key-change-in-production-min-32-chars}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # 24 soat
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}   # access token — 24 soat
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}   # refresh token — 30 kun
   admin:
     phone: ${ADMIN_PHONE:+998900000000}
     password: ${ADMIN_PASSWORD:admin123}
     name: ${ADMIN_NAME:Super Admin}
+  fcm:
+    # Firebase service account JSON kaliti yo'li (Firebase Console -> Project Settings ->
+    # Service accounts -> Generate new private key). Fayl topilmasa push o'chirilgan
+    # holda ishlayveradi. Production'da env orqali bering, git'ga qo'ymang!
+    service-account: ${FCM_SERVICE_ACCOUNT:firebase-service-account.json}

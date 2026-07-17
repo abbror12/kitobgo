@@ -41,3 +41,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Firebase service account (maxfiy) ###
+firebase-service-account.json

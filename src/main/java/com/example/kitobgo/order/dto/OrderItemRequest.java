@@ -1,9 +1,8 @@
 package com.example.kitobgo.order.dto;
 
-import java.util.UUID;
 
 public record OrderItemRequest(
-        UUID productId,
+        Long productId,
         Integer quantity
 ) {
 }

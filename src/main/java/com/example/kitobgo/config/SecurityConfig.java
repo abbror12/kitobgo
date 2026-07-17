@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -64,17 +64,32 @@ public class SecurityConfig {
                         // anonim so'rovda 403 bilan niqoblanadi.
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
+                        // EMU eksporti — faqat admin sayti. Yuqoridagi permitAll aynan "/api/orders"
+                        // uchun (ostidagi yo'llarga tarqalmaydi), bu qoida esa buni aniq qilib qo'yadi.
+                        .requestMatchers(HttpMethod.POST, "/api/orders/emu/**").hasRole("ADMIN")
+                        // Checkout viloyatlar ro'yxati — ochiq (sayt formasi uchun).
+                        .requestMatchers(HttpMethod.GET, "/api/orders/regions").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         // Buyurtmalarni ko'rish — faqat admin sayti (ADMIN + SUPER_ADMIN).
-                        // COURIER/OPERATOR admin saytiga kira olmaydi; ular alohida mobil ilovadan foydalanadi.
+                        // COURIER/OPERATOR/SMM_MANAGER admin saytiga kira olmaydi — har biri
+                        // quyidagi o'z namespace'idan faqat o'ziga tegishlisini ko'radi.
                         .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("ADMIN")
                         // Status/kuryer o'zgartirish — istalgan tizimga kirgan foydalanuvchi HTTP darajasida
                         // o'tadi; aniq rol va "o'z buyurtmasi" tekshiruvi OrderService'da bajariladi.
                         .requestMatchers(HttpMethod.PATCH, "/api/orders/**").authenticated()
-                        // Mobil ilova endpointlari — har rol o'z namespace'ida.
+                        // Rolga xos ilova endpointlari — har rol o'z namespace'ida.
+                        // Operator/kuryer mobil ilovadan, SMM manager esa web'dan ishlaydi;
+                        // ikkalasi ham admin saytiga kirmagani uchun gate bir xil.
                         .requestMatchers("/api/operator/**").hasRole("OPERATOR")
                         .requestMatchers("/api/courier/**").hasRole("COURIER")
+                        .requestMatchers("/api/smm/**").hasRole("SMM_MANAGER")
+                        // FCM qurilma token'lari — istalgan tizimga kirgan foydalanuvchi
+                        // (operator/kuryer mobil ilovadan) ro'yxatga oladi/o'chiradi.
+                        .requestMatchers("/api/devices/**").authenticated()
+                        // Foydalanuvchilarni ko'rish (ro'yxat, qidiruv, bittasi) — ADMIN ham ko'ra oladi;
+                        // yaratish/o'zgartirish/o'chirish esa faqat SUPER_ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("SUPER_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")

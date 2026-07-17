@@ -2,10 +2,9 @@ package com.example.kitobgo.product.dto;
 
 import com.example.kitobgo.product.ProductImage;
 
-import java.util.UUID;
 
 public record ProductImageResponseDto(
-        UUID id,
+        Long id,
         String url,
         Integer sortOrder
 ) {

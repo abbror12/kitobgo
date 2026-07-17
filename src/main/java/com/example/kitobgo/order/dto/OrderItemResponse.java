@@ -2,10 +2,9 @@ package com.example.kitobgo.order.dto;
 
 import com.example.kitobgo.order.OrderItem;
 
-import java.util.UUID;
 
 public record OrderItemResponse(
-        UUID productId,
+        Long productId,
         String productTitle,
         Integer quantity,
         Integer priceAtPurchase,

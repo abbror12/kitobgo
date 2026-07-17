@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "product_images")
@@ -14,9 +13,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ProductImage {
+    /** Product kabi ketma-ket raqam — sabab {@link Product#id} izohida. */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String url;
 

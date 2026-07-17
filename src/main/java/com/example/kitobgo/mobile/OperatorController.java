@@ -1,6 +1,7 @@
 package com.example.kitobgo.mobile;
 
 import com.example.kitobgo.mobile.dto.OnlineStatusRequest;
+import com.example.kitobgo.order.OrderStatus;
 import com.example.kitobgo.order.OrderService;
 import com.example.kitobgo.order.dto.OrderResponseDto;
 import com.example.kitobgo.presence.PresenceService;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -26,9 +28,9 @@ import java.util.UUID;
  * (xavfsizlik konfiguratsiyasida gate qilingan) va faqat o'ziga biriktirilgan
  * buyurtmalarni ko'radi.
  * <p>
- * Statusni o'zgartirish va kuryer biriktirish umumiy endpointlar orqali amalga
- * oshiriladi: {@code PATCH /api/orders/{id}/status}, {@code PATCH /api/orders/{id}/courier}
- * (egalik OrderService'da tekshiriladi).
+ * Statusni o'zgartirish umumiy endpoint orqali amalga oshiriladi:
+ * {@code PATCH /api/orders/{id}/status} (egalik OrderService'da tekshiriladi).
+ * Kuryer biriktirish operatorga berilmagan — faqat admin qiladi.
  */
 @RestController
 @RequestMapping("/api/operator")
@@ -61,10 +63,12 @@ public class OperatorController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Operatorga biriktirilgan buyurtmalar ro'yxati. */
+    /** Operatorga biriktirilgan buyurtmalar ro'yxati; {@code ?status=} — ixtiyoriy filtr. */
     @GetMapping("/orders")
-    public ResponseEntity<List<OrderResponseDto>> myOrders(@AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.getMyOperatorOrders(principal.user()));
+    public ResponseEntity<List<OrderResponseDto>> myOrders(
+            @RequestParam(required = false) OrderStatus status,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(orderService.getMyOwnedOrders(principal.user(), status));
     }
 
     /** Bitta buyurtma (faqat o'ziga biriktirilgan bo'lsa). */

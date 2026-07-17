@@ -36,6 +36,12 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Telefon raqami yoki parol noto'g'ri"));
     }
 
+    /** Autentifikatsiya yaroqsiz (masalan refresh token noto'g'ri/muddati o'tgan) — 401. */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", ex.getMessage()));
+    }
+
     /** Noto'g'ri kirish ma'lumoti (masalan rasm bo'lmagan fayl) — 400. */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {

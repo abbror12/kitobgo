@@ -1,0 +1,26 @@
+# Liquibase bosh changelog — barcha migratsiyalar shu yerdan tartib bilan ulanadi.
+# Yangi sxema o'zgarishi = yangi raqamlangan SQL fayl + shu yerga yangi include.
+# Bir marta qo'llangan faylni HECH QACHON o'zgartirmang — yangi fayl qo'shing.
+databaseChangeLog:
+  - include:
+      file: db/changelog/0001-baseline.sql
+  - include:
+      file: db/changelog/0002-orders-source.sql
+  - include:
+      file: db/changelog/0003-users-role-smm-manager.sql
+  - include:
+      file: db/changelog/0004-orders-delivery.sql
+  - include:
+      file: db/changelog/0005-orders-address-detail.sql
+  - include:
+      file: db/changelog/0006-emu-shipments.sql
+  - include:
+      file: db/changelog/0007-order-status-history.sql
+  - include:
+      file: db/changelog/0008-order-source-social.sql
+  - include:
+      file: db/changelog/0009-delivery-method-nullable.sql
+  - include:
+      file: db/changelog/0010-orders-drop-address.sql
+  - include:
+      file: db/changelog/0011-products-bigint-id.sql

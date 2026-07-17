@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "products")
@@ -15,9 +14,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Product {
+    /**
+     * Katalog ID'si — ketma-ket raqam (bigint identity), UUID emas: katalog baribir ochiq
+     * ({@code GET /api/products} permitAll), yashiradigan narsa yo'q, "42-kitob" deb
+     * gaplashish va URL esa qulay. Buyurtma/foydalanuvchi ID'lari esa ataylab UUID —
+     * ularni taxmin qilib bo'lmasligi kerak.
+     */
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     /**
      * Optimistik lock versiyasi. Hibernate avtomatik boshqaradi: har UPDATE'da

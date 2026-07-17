@@ -1,6 +1,7 @@
 package com.example.kitobgo.mobile;
 
 import com.example.kitobgo.order.OrderService;
+import com.example.kitobgo.order.OrderStatus;
 import com.example.kitobgo.order.dto.OrderResponseDto;
 import com.example.kitobgo.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,10 +32,12 @@ public class CourierController {
 
     private final OrderService orderService;
 
-    /** Kuryerga biriktirilgan yetkazishlar ro'yxati. */
+    /** Kuryerga biriktirilgan yetkazishlar ro'yxati; {@code ?status=} — ixtiyoriy filtr. */
     @GetMapping("/orders")
-    public ResponseEntity<List<OrderResponseDto>> myOrders(@AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.getMyCourierOrders(principal.user()));
+    public ResponseEntity<List<OrderResponseDto>> myOrders(
+            @RequestParam(required = false) OrderStatus status,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(orderService.getMyCourierOrders(principal.user(), status));
     }
 
     /** Bitta yetkazish (faqat o'ziga biriktirilgan bo'lsa). */

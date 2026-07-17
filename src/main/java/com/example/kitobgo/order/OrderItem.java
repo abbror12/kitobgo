@@ -28,6 +28,5 @@ public class OrderItem {
 
     private Integer quantity;
 
-    /** Buyurtma berilgan paytdagi narx — keyin mahsulot narxi o'zgarsa ham bu o'zgarmaydi. */
     private Integer priceAtPurchase;
 }
