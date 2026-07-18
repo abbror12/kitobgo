@@ -17,9 +17,11 @@ services:
     image: minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
+    # Faqat localhost — tashqariga nginx xizmat qiladi (https://kitobgo.com/files/ -> minio).
+    # Konsol (9001) kerak bo'lsa SSH tunnel: ssh -L 9001:127.0.0.1:9001 user@server
     ports:
-      - "9000:9000"   # rasm URL'lari shu port orqali ochiq (S3_PUBLIC_URL)
-      - "9001:9001"   # veb-konsol — kerak bo'lmasa yopib qo'ying
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
       MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?S3_SECRET_KEY .env da berilishi shart}
@@ -30,8 +32,9 @@ services:
     image: ghcr.io/abbror12/kitobgo:dev
     restart: unless-stopped
     env_file: .env
+    # Faqat localhost — tashqariga nginx (80/443) xizmat qiladi.
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     # Konteyner ichidan server (host) mashinasidagi Postgres'ga chiqish uchun —
     # DB_URL'da host.docker.internal ishlatilsa shu kerak (Linux'da).
     extra_hosts:
