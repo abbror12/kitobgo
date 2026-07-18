@@ -1,14 +1,13 @@
 package com.example.kitobgo.order.emu;
 
 import com.example.kitobgo.common.ConflictException;
-import com.example.kitobgo.common.ForbiddenException;
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.order.DeliveryMethod;
 import com.example.kitobgo.order.Order;
+import com.example.kitobgo.order.OrderAuthorizationPolicy;
 import com.example.kitobgo.order.OrderRepository;
 import com.example.kitobgo.order.OrderStatus;
 import com.example.kitobgo.order.dto.OrderResponseDto;
-import com.example.kitobgo.user.Role;
 import com.example.kitobgo.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +32,7 @@ import java.util.UUID;
 public class EmuService {
 
     private final OrderRepository orderRepository;
+    private final OrderAuthorizationPolicy authorizationPolicy;
     private final EmuExcelWriter excelWriter;
 
     /**
@@ -42,7 +42,7 @@ public class EmuService {
      */
     @Transactional(readOnly = true)
     public List<OrderResponseDto> pending(User actor) {
-        assertAdmin(actor);
+        authorizationPolicy.assertAdmin(actor);
         return findPending().stream()
                 .map(OrderResponseDto::from)
                 .toList();
@@ -59,7 +59,7 @@ public class EmuService {
      */
     @Transactional
     public ExcelFile export(List<UUID> orderIds, User actor) {
-        assertAdmin(actor);
+        authorizationPolicy.assertAdmin(actor);
 
         List<Order> orders = (orderIds == null || orderIds.isEmpty())
                 ? findPending()
@@ -87,7 +87,7 @@ public class EmuService {
      */
     @Transactional
     public OrderResponseDto setTrackingNumber(UUID orderId, String trackingNumber, User actor) {
-        assertAdmin(actor);
+        authorizationPolicy.assertAdmin(actor);
 
         Order order = orderRepository.findWithItemsById(orderId)
                 .orElseThrow(() -> new NotFoundException("Buyurtma topilmadi: " + orderId));
@@ -126,12 +126,5 @@ public class EmuService {
             selected.add(match);
         }
         return selected;
-    }
-
-    private void assertAdmin(User actor) {
-        Role role = actor.getRole();
-        if (role != Role.ADMIN && role != Role.SUPER_ADMIN) {
-            throw new ForbiddenException("EMU bo'limi faqat admin uchun");
-        }
     }
 }

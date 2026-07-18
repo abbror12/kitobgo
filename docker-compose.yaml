@@ -1,0 +1,21 @@
+# Dev muhit: rasm saqlash uchun MinIO (S3-mos).
+# Ishga tushirish:  docker compose up -d
+# Konsol (brauzer): http://localhost:9001  (login: minioadmin / minioadmin)
+#
+# Bucket'ni qo'lda yaratish shart emas — dastur birinchi ishga tushishida o'zi yaratadi
+# va rasmlarni anonim o'qishga ochadi (S3FileStorageService.ensureBucket).
+services:
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"   # S3 API — app.storage.s3.endpoint
+      - "9001:9001"   # veb-konsol
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: MinIO-d05d5354461f4f9ca75d   # application.yaml'dagi default bilan mos
+    volumes:
+      - minio-data:/data
+
+volumes:
+  minio-data:

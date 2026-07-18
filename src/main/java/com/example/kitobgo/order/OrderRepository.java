@@ -1,5 +1,7 @@
 package com.example.kitobgo.order;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,48 +13,42 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Bitta buyurtmani o'qiydigan metodlar {@link Order#DETAIL_GRAPH} bilan hamma bog'lanishni
+ * (items, mahsulot, operator, kuryer, pasilka, tarix) birga N+1 siz yuklaydi.
+ * <p>
+ * Ro'yxatlar esa <b>ikki bosqichda</b> o'qiladi: avval graf<b>siz</b> {@code Page} so'rovi
+ * (sahifalash SQL darajasida — {@code limit/offset}), keyin sahifadagi id'lar
+ * {@link #findWithDetailByIdIn} orqali to'liq graf bilan yuklanadi. Collection fetch'li
+ * graf {@code Pageable} bilan birga ishlatilsa Hibernate sahifalashni xotirada qiladi
+ * (HHH90003004 — hamma qator baribir yuklanadi), shu sababli bu ikkisi ataylab ajratilgan.
+ */
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    /** Buyurtmalarni items, mahsulot, operator va kuryer bilan birga (N+1 siz) yuklaydi. */
-    @Override
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findAll();
-
-    /** Bitta buyurtmani items, mahsulot, operator va kuryer bilan birga (N+1 siz) yuklaydi. */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
+    @EntityGraph(Order.DETAIL_GRAPH)
     Optional<Order> findWithItemsById(UUID id);
 
-    /** Operatorga biriktirilgan buyurtmalar (mobil ilova — "mening buyurtmalarim"). */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findByOperatorIdOrderByCreatedAtDesc(UUID operatorId);
+    /** 2-bosqich: sahifadagi buyurtmalarni to'liq graf bilan yuklash. */
+    @EntityGraph(Order.DETAIL_GRAPH)
+    List<Order> findWithDetailByIdIn(Collection<UUID> ids);
 
-    /** Kuryerga biriktirilgan buyurtmalar (mobil ilova — "mening yetkazishlarim"). */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findByCourierIdOrderByCreatedAtDesc(UUID courierId);
+    /** Operatorga biriktirilgan buyurtmalar sahifasi (mobil ilova — "mening buyurtmalarim"). */
+    Page<Order> findByOperatorId(UUID operatorId, Pageable pageable);
+
+    /** Kuryerga biriktirilgan buyurtmalar sahifasi (mobil ilova — "mening yetkazishlarim"). */
+    Page<Order> findByCourierId(UUID courierId, Pageable pageable);
 
     /** Bitta operatorning ma'lum statusdagi buyurtmalari (admin panel / mobil filtr). */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findByOperatorIdAndStatusOrderByCreatedAtDesc(UUID operatorId, OrderStatus status);
+    Page<Order> findByOperatorIdAndStatus(UUID operatorId, OrderStatus status, Pageable pageable);
 
     /** Bitta kuryerning ma'lum statusdagi yetkazishlari (mobil filtr). */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findByCourierIdAndStatusOrderByCreatedAtDesc(UUID courierId, OrderStatus status);
+    Page<Order> findByCourierIdAndStatus(UUID courierId, OrderStatus status, Pageable pageable);
 
     /** Kuryerning faqat ko'rishga ruxsat etilgan statuslardagi yetkazishlari. */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findByCourierIdAndStatusInOrderByCreatedAtDesc(UUID courierId, Collection<OrderStatus> statuses);
+    Page<Order> findByCourierIdAndStatusIn(UUID courierId, Collection<OrderStatus> statuses, Pageable pageable);
 
-    /** Ma'lum statusdagi barcha buyurtmalar (admin panel filtri). */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
-    List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
+    /** Ma'lum statusdagi barcha buyurtmalar sahifasi (admin panel filtri). */
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 
     /** Egasiz (operatorsiz) buyurtmalar hovuzi — eskidan yangiga (FIFO taqsimot uchun). */
     List<Order> findByOperatorIsNullOrderByCreatedAtAsc();
@@ -63,8 +59,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
      * tizim taxmin qilmaydi va qaror adminga qoladi. Bu ro'yxatsiz ular hech qayerda
      * ko'rinmasdi — EMU bo'limiga ham tushmaydi, kuryer ham biriktirilmaydi.
      */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
+    @EntityGraph(Order.DETAIL_GRAPH)
     List<Order> findByStatusAndDeliveryMethodIsNullOrderByCreatedAtAsc(OrderStatus status);
 
     /**
@@ -72,8 +67,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
      * buyurtmalar: EMU orqali ketadi, operator tasdiqlagan va hali pasilka yozuvi yo'q
      * ({@code emuShipment is null} = hali eksport qilinmagan). Eskidan yangiga.
      */
-    @EntityGraph(attributePaths = {"items", "items.product", "operator", "courier", "emuShipment",
-            "history", "history.changedBy"})
+    @EntityGraph(Order.DETAIL_GRAPH)
     List<Order> findByDeliveryMethodAndStatusAndEmuShipmentIsNullOrderByCreatedAtAsc(
             DeliveryMethod deliveryMethod, OrderStatus status);
 

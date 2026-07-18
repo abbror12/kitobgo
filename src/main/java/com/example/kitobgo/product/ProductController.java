@@ -4,6 +4,7 @@ import com.example.kitobgo.common.PagedResponse;
 import com.example.kitobgo.product.dto.DiscountRequestDto;
 import com.example.kitobgo.product.dto.ProductRequestDto;
 import com.example.kitobgo.product.dto.ProductResponseDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -23,7 +24,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ProductResponseDto> create(@RequestBody ProductRequestDto requestDto) {
+    public ResponseEntity<ProductResponseDto> create(@Valid @RequestBody ProductRequestDto requestDto) {
         ProductResponseDto response = productService.create(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -39,7 +40,7 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDto> update(
             @PathVariable Long id,
-            @RequestBody ProductRequestDto requestDto) {
+            @Valid @RequestBody ProductRequestDto requestDto) {
         return ResponseEntity.ok(productService.update(id, requestDto));
     }
 
@@ -47,7 +48,7 @@ public class ProductController {
     @PatchMapping("/{id}/discount")
     public ResponseEntity<ProductResponseDto> setDiscount(
             @PathVariable Long id,
-            @RequestBody DiscountRequestDto requestDto) {
+            @Valid @RequestBody DiscountRequestDto requestDto) {
         return ResponseEntity.ok(productService.setDiscount(id, requestDto.discountPrice()));
     }
 
@@ -64,9 +65,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.getById(id));
     }
 
+    /** Mahsulotlar sahifasi; {@code ?page=&size=} — sahifalash (default 12, sarlavha bo'yicha). */
     @GetMapping
-    public ResponseEntity<List<ProductResponseDto>> getAll() {
-        return ResponseEntity.ok(productService.getAll());
+    public ResponseEntity<PagedResponse<ProductResponseDto>> getAll(
+            @PageableDefault(size = 12, sort = "title") Pageable pageable) {
+        return ResponseEntity.ok(productService.getAll(pageable));
     }
 
     @GetMapping("/search")

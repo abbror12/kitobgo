@@ -24,6 +24,8 @@ public class ProductService {
 
     @Transactional
     public ProductResponseDto create(ProductRequestDto dto) {
+        validateDiscount(dto.price(), dto.discountPrice());
+
         Product product = Product.builder()
                 .title(dto.title())
                 .description(dto.description())
@@ -141,7 +143,7 @@ public class ProductService {
 
     /**
      * Kitobning bitta rasmini o'chiradi va qolganlarini qayta tartiblaydi.
-     * orphanRemoval tufayli rasm bazadan ham o'chadi.
+     * orphanRemoval tufayli rasm bazadan, commit'dan keyin esa diskdan ham o'chadi.
      */
     @Transactional
     public void deleteImage(Long productId, Long imageId) {
@@ -155,15 +157,18 @@ public class ProductService {
 
         product.removeImage(image);
         productRepository.save(product);
+        fileStorageService.deleteAfterCommit(image.getUrl());
     }
 
     /**
-     * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi.
+     * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi;
+     * rasm fayllari commit'dan keyin diskdan tozalanadi.
      */
     @Transactional
     public void delete(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
+        product.getImages().forEach(img -> fileStorageService.deleteAfterCommit(img.getUrl()));
         productRepository.delete(product);
     }
 
@@ -174,11 +179,10 @@ public class ProductService {
         return ProductResponseDto.from(product);
     }
 
+    /** Mahsulotlar sahifasi (katalog). Filtrsiz to'liq ro'yxat o'rniga sahifalab beriladi. */
     @Transactional(readOnly = true)
-    public List<ProductResponseDto> getAll() {
-        return productRepository.findAll().stream()
-                .map(ProductResponseDto::from)
-                .toList();
+    public PagedResponse<ProductResponseDto> getAll(Pageable pageable) {
+        return PagedResponse.from(productRepository.findAll(pageable).map(ProductResponseDto::from));
     }
 
     /**

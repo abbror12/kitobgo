@@ -1,6 +1,9 @@
 package com.example.kitobgo.order.dto;
 
 import com.example.kitobgo.order.Region;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
@@ -17,8 +20,13 @@ import java.util.List;
  * chiqadi ({@code Region.autoRoute()}).
  */
 public record OrderRequestDto(
-        List<OrderItemRequest> items,
+        @NotEmpty(message = "Buyurtmada kamida bitta mahsulot bo'lishi kerak")
+        List<@Valid OrderItemRequest> items,
+
+        @NotBlank(message = "Mijoz ismi ko'rsatilishi shart")
         String customerName,
+
+        @NotBlank(message = "Telefon raqami ko'rsatilishi shart")
         String customerPhone,
 
         @NotNull(message = "Viloyat (region) ko'rsatilishi shart")

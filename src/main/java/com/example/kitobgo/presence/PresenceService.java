@@ -1,7 +1,7 @@
 package com.example.kitobgo.presence;
 
 import com.example.kitobgo.common.NotFoundException;
-import com.example.kitobgo.order.OrderService;
+import com.example.kitobgo.order.OrderAssignmentService;
 import com.example.kitobgo.user.Role;
 import com.example.kitobgo.user.User;
 import com.example.kitobgo.user.UserRepository;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 /**
  * Operatorning "mavjudlik" (online + heartbeat) holatini boshqaradi va har o'zgarishda
- * buyurtma taqsimotini qayta muvozanatlaydi ({@link OrderService#rebalance()}): egasiz
+ * buyurtma taqsimotini qayta muvozanatlaydi ({@link OrderAssignmentService#rebalance()}): egasiz
  * buyurtmalar mavjud operatorlarga avtomatik tarqatiladi (push modeli).
  * <p>
  * Kuryerlarga tegishli emas — kuryerga buyurtmani admin/operator qo'lda biriktiradi.
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class PresenceService {
 
     private final UserRepository userRepository;
-    private final OrderService orderService;
+    private final OrderAssignmentService assignmentService;
 
     /** Foydalanuvchini online/offline qiladi (ishni boshlash/tugatish). */
     @Transactional
@@ -51,7 +51,7 @@ public class PresenceService {
 
     private void afterPresenceChange(User user) {
         if (user.getRole() == Role.OPERATOR) {
-            orderService.rebalance();
+            assignmentService.rebalance();
         }
     }
 

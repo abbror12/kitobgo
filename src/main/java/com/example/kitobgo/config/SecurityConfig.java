@@ -76,7 +76,7 @@ public class SecurityConfig {
                         // quyidagi o'z namespace'idan faqat o'ziga tegishlisini ko'radi.
                         .requestMatchers(HttpMethod.GET, "/api/orders/**").hasRole("ADMIN")
                         // Status/kuryer o'zgartirish — istalgan tizimga kirgan foydalanuvchi HTTP darajasida
-                        // o'tadi; aniq rol va "o'z buyurtmasi" tekshiruvi OrderService'da bajariladi.
+                        // o'tadi; aniq rol va "o'z buyurtmasi" tekshiruvi OrderAuthorizationPolicy'da bajariladi.
                         .requestMatchers(HttpMethod.PATCH, "/api/orders/**").authenticated()
                         // Rolga xos ilova endpointlari — har rol o'z namespace'ida.
                         // Operator/kuryer mobil ilovadan, SMM manager esa web'dan ishlaydi;

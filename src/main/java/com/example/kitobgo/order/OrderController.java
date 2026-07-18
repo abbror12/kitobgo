@@ -1,5 +1,6 @@
 package com.example.kitobgo.order;
 
+import com.example.kitobgo.common.PagedResponse;
 import com.example.kitobgo.order.dto.AssignCourierRequest;
 import com.example.kitobgo.order.dto.ChangeStatusRequest;
 import com.example.kitobgo.order.dto.OrderRequestDto;
@@ -11,6 +12,9 @@ import com.example.kitobgo.order.emu.EmuService;
 import com.example.kitobgo.security.UserPrincipal;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,19 +28,23 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderService orderService;
+    private final OrderCreationService creationService;
+    private final OrderStatusService statusService;
+    private final OrderAssignmentService assignmentService;
+    private final OrderDeliveryService deliveryService;
+    private final OrderQueryService queryService;
     private final EmuService emuService;
 
     @PostMapping
     public ResponseEntity<OrderResponseDto> create(@Valid @RequestBody OrderRequestDto requestDto) {
-        OrderResponseDto response = orderService.create(requestDto);
+        OrderResponseDto response = creationService.create(requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /** Checkout uchun viloyatlar ro'yxati (har biriga yetkazish turi bilan). Ochiq. */
     @GetMapping("/regions")
     public ResponseEntity<List<RegionResponse>> regions() {
-        return ResponseEntity.ok(orderService.regions());
+        return ResponseEntity.ok(queryService.regions());
     }
 
     /**
@@ -48,7 +56,7 @@ public class OrderController {
             @PathVariable UUID id,
             @Valid @RequestBody ChangeStatusRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.changeStatus(id, request.status(), principal.user()));
+        return ResponseEntity.ok(statusService.changeStatus(id, request.status(), principal.user()));
     }
 
     /**
@@ -59,7 +67,7 @@ public class OrderController {
             @PathVariable UUID id,
             @Valid @RequestBody AssignCourierRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.assignCourier(id, request.courierId(), principal.user()));
+        return ResponseEntity.ok(assignmentService.assignCourier(id, request.courierId(), principal.user()));
     }
 
     /** Buyurtmadan kuryerni yechadi. Faqat ADMIN/SUPER_ADMIN. */
@@ -67,7 +75,7 @@ public class OrderController {
     public ResponseEntity<OrderResponseDto> unassignCourier(
             @PathVariable UUID id,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.unassignCourier(id, principal.user()));
+        return ResponseEntity.ok(assignmentService.unassignCourier(id, principal.user()));
     }
 
     /**
@@ -81,7 +89,7 @@ public class OrderController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateDeliveryRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.updateDelivery(id, request, principal.user()));
+        return ResponseEntity.ok(deliveryService.updateDelivery(id, request, principal.user()));
     }
 
     /**
@@ -104,23 +112,25 @@ public class OrderController {
     @GetMapping("/unrouted")
     public ResponseEntity<List<OrderResponseDto>> unrouted(
             @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(orderService.unrouted(principal.user()));
+        return ResponseEntity.ok(queryService.unrouted(principal.user()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(orderService.getById(id));
+        return ResponseEntity.ok(queryService.getById(id));
     }
 
     /**
-     * Buyurtmalar ro'yxati (admin panel). Ixtiyoriy filtrlar:
+     * Buyurtmalar sahifasi (admin panel). Ixtiyoriy filtrlar:
      * {@code ?operatorId=} — bitta operatorning buyurtmalari,
      * {@code ?status=} — ma'lum statusdagilar; birga ishlatish ham mumkin.
+     * Sahifalash: {@code ?page=&size=} (default 20, yangi buyurtmalar birinchi).
      */
     @GetMapping
-    public ResponseEntity<List<OrderResponseDto>> getAll(
+    public ResponseEntity<PagedResponse<OrderResponseDto>> getAll(
             @RequestParam(required = false) UUID operatorId,
-            @RequestParam(required = false) OrderStatus status) {
-        return ResponseEntity.ok(orderService.getAll(operatorId, status));
+            @RequestParam(required = false) OrderStatus status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(queryService.getAll(operatorId, status, pageable));
     }
 }

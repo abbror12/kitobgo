@@ -10,6 +10,25 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * {@code Order.detail} — buyurtmani API javobi ({@code OrderResponseDto}) uchun kerak
+ * bo'lgan hamma bog'lanish bilan birga (N+1 siz) yuklaydigan graf. Repository'dagi
+ * o'qish metodlari {@code @EntityGraph(Order.DETAIL_GRAPH)} bilan shuni ishlatadi.
+ */
+@NamedEntityGraph(
+        name = Order.DETAIL_GRAPH,
+        attributeNodes = {
+                @NamedAttributeNode(value = "items", subgraph = "items"),
+                @NamedAttributeNode("operator"),
+                @NamedAttributeNode("courier"),
+                @NamedAttributeNode("emuShipment"),
+                @NamedAttributeNode(value = "history", subgraph = "history")
+        },
+        subgraphs = {
+                @NamedSubgraph(name = "items", attributeNodes = @NamedAttributeNode("product")),
+                @NamedSubgraph(name = "history", attributeNodes = @NamedAttributeNode("changedBy"))
+        }
+)
 @Entity
 @Table(name = "orders")
 @Getter
@@ -18,6 +37,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class Order {
+
+    /** {@link NamedEntityGraph} nomi — repository metodlarida ishlatiladi. */
+    public static final String DETAIL_GRAPH = "Order.detail";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -57,7 +80,7 @@ public class Order {
     //   landmark  "5-maktab yonida"  -> mo'ljal                (operator qo'ng'iroqda yozadi)
     //
     // Kuryer/pochta ko'radigani: "Samarqand viloyati, Samarqand sh., 5-maktab yonida".
-    // Uchalasi ham buyurtmani tasdiqlash uchun shart (OrderService.assertDeliverable) —
+    // Uchalasi ham buyurtmani tasdiqlash uchun shart (OrderDeliveryService.assertDeliverable) —
     // mo'ljalsiz manzil "Samarqand viloyati, Samarqand sh." bo'lib qoladi, bunga yetkazib
     // bo'lmaydi.
 

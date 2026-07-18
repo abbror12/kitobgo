@@ -1,6 +1,6 @@
 package com.example.kitobgo.presence;
 
-import com.example.kitobgo.order.OrderService;
+import com.example.kitobgo.order.OrderAssignmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -15,10 +15,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PresenceSweeper {
 
-    private final OrderService orderService;
+    private final OrderAssignmentService assignmentService;
 
     @Scheduled(fixedDelayString = "${app.presence.sweep-interval-ms:60000}")
     public void sweep() {
-        orderService.rebalance();
+        assignmentService.rebalance();
     }
 }

@@ -28,8 +28,21 @@ springdoc:
     path: /v3/api-docs              # OpenAPI JSON manzili
 
 app:
+  storage:
+    # Rasm saqlash turi: s3 (default — MinIO, docker-compose bilan ko'tariladi) yoki local (disk).
+    type: ${STORAGE_TYPE:s3}
+    s3:
+      # MinIO endpoint'i (docker-compose.yaml). AWS S3 ishlatilsa bo'sh qoldiring.
+      endpoint: ${S3_ENDPOINT:http://localhost:9000}
+      region: ${S3_REGION:us-east-1}     # MinIO uchun ahamiyatsiz; AWS'da haqiqiy region
+      bucket: ${S3_BUCKET:kitobgo}
+      access-key: ${S3_ACCESS_KEY:minioadmin}
+      secret-key: ${S3_SECRET_KEY:MinIO-d05d5354461f4f9ca75d}   # lokal MinIO paroli; prod'da env orqali
+      # Rasmlar ko'rsatiladigan ochiq bazaviy URL (public bucket domeni yoki CDN).
+      # Bo'sh bo'lsa endpoint + bucket'dan yasaladi (MinIO uchun ayni kerakli qiymat).
+      public-url: ${S3_PUBLIC_URL:}
   upload:
-    dir: ${UPLOAD_DIR:uploads}   # yuklangan fayllar saqlanadigan papka
+    dir: ${UPLOAD_DIR:uploads}   # local turda yuklangan fayllar saqlanadigan papka
   jwt:
     # Ishlab chiqarishda (production) bu qiymatni environment variable orqali bering!
     secret: ${JWT_SECRET:kitobgo-super-secret-key-change-in-production-min-32-chars}
