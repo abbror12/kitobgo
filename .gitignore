@@ -44,3 +44,6 @@ out/
 
 ### Firebase service account (maxfiy) ###
 firebase-service-account.json
+
+### Environment (maxfiy qiymatlar; namuna — .env.example) ###
+.env

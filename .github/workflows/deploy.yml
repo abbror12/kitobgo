@@ -1,0 +1,93 @@
+# dev branch'ga push -> Docker image GHCR'ga -> serverda compose orqali yangilash.
+#
+# Kerakli GitHub Secrets (repo Settings -> Secrets and variables -> Actions):
+#   SERVER_HOST     — server IP yoki domen
+#   SERVER_USER     — SSH foydalanuvchi (masalan: root yoki deploy)
+#   SERVER_SSH_KEY  — SSH private key (ed25519 tavsiya; ochiq juftligi serverda
+#                     ~/.ssh/authorized_keys ichida bo'lishi kerak)
+#   SERVER_PORT     — SSH port (ixtiyoriy, default 22)
+#
+# Serverda oldindan tayyor bo'lishi kerak: Docker + /opt/kitobgo papkasida
+# docker-compose.prod.yaml va to'ldirilgan .env (qarang docker-compose.prod.yaml izohi).
+name: Deploy (dev)
+
+on:
+  push:
+    branches: [dev]
+
+# Bir vaqtda bitta deploy — ketma-ket pushlarda eskisi bekor bo'ladi.
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: kitobgo
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - "5433:5432"
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Test
+        run: ./gradlew test --no-daemon
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: GHCR'ga login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image build + push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/abbror12/kitobgo:dev
+            ghcr.io/abbror12/kitobgo:dev-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Serverda yangilash
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd /opt/kitobgo
+            docker compose -f docker-compose.prod.yaml pull app
+            docker compose -f docker-compose.prod.yaml up -d
+            docker image prune -f

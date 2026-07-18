@@ -1,0 +1,10 @@
+.git
+.gradle
+build
+uploads
+docs
+.idea
+.vscode
+.env
+*.md
+firebase-service-account.json

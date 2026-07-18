@@ -1,0 +1,79 @@
+# ============================================================================
+# PRODUCTION profil — ishga tushirish:
+#   SPRING_PROFILES_ACTIVE=prod java -jar kitobgo.jar
+#
+# Bu profilda hech qanday maxfiy qiymatning defaulti YO'Q — barchasi environment
+# variable orqali berilishi shart, berilmasa dastur ishga tushmaydi (fail-fast).
+# Bu ataylab shunday: dev parollari bilan production ko'tarilib ketmasin.
+#
+# Majburiy env o'zgaruvchilar:
+#   DB_URL, DB_USERNAME, DB_PASSWORD          — PostgreSQL
+#   JWT_SECRET                                — kamida 32 belgi, tasodifiy
+#   ADMIN_PHONE, ADMIN_PASSWORD               — birinchi super-admin seed
+#   S3_ENDPOINT, S3_BUCKET,
+#   S3_ACCESS_KEY, S3_SECRET_KEY              — MinIO/S3 rasm saqlash
+# Ixtiyoriy:
+#   S3_PUBLIC_URL                             — CDN/ochiq domen (bo'lmasa endpoint+bucket)
+#   FCM_SERVICE_ACCOUNT                       — push uchun Firebase kaliti yo'li
+#   PORT                                      — HTTP port (default 8080)
+# ============================================================================
+
+server:
+  port: ${PORT:8080}
+  # Reverse proxy (nginx/traefik) ortida to'g'ri scheme/IP ko'rinishi uchun.
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+
+spring:
+  datasource:
+    url: ${DB_URL}                  # masalan jdbc:postgresql://db:5432/kitobgo
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  jpa:
+    hibernate:
+      ddl-auto: validate            # sxema faqat Liquibase orqali o'zgaradi
+    open-in-view: false             # so'rov davomida sessiyani ushlab turmaslik
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
+
+# Swagger production'da o'chiq — API hujjati tashqariga ochilmasin.
+# Vaqtincha kerak bo'lsa: SWAGGER_ENABLED=true
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+
+logging:
+  level:
+    root: info
+    org.hibernate.SQL: warn
+    com.example.kitobgo: info
+
+app:
+  storage:
+    type: s3                        # production'da har doim bulut — disk server bilan yo'qoladi
+    s3:
+      endpoint: ${S3_ENDPOINT}      # MinIO/R2 endpoint'i; AWS S3'da bo'sh string bering
+      region: ${S3_REGION:us-east-1}
+      bucket: ${S3_BUCKET}
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+      public-url: ${S3_PUBLIC_URL:}
+  jwt:
+    secret: ${JWT_SECRET}           # defaulti yo'q — berilmasa dastur ko'tarilmaydi
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}          # access — 24 soat
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}   # refresh — 30 kun
+  admin:
+    phone: ${ADMIN_PHONE}
+    password: ${ADMIN_PASSWORD}     # birinchi ishga tushishdayoq kuchli parol bering
+    name: ${ADMIN_NAME:Super Admin}
+  fcm:
+    service-account: ${FCM_SERVICE_ACCOUNT:firebase-service-account.json}

@@ -1,0 +1,44 @@
+# Testlar har push/PR'da yuriladi. Context-test haqiqiy Postgres talab qiladi
+# (Liquibase startup'da migratsiya yuradi) — shuning uchun service container 5433
+# portga ulanadi (application.yaml'dagi dev default bilan mos).
+name: CI
+
+on:
+  push:
+    branches: [master, dev]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: kitobgo
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - "5433:5432"
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Test
+        run: ./gradlew test --no-daemon
+        env:
+          # MinIO CI'da yo'q — ensureBucket best-effort, dastur baribir ko'tariladi.
+          STORAGE_TYPE: s3
