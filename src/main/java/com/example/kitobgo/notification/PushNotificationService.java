@@ -129,6 +129,9 @@ public class PushNotificationService {
             SendResponse r = responses.get(i);
             if (!r.isSuccessful() && r.getException() != null) {
                 MessagingErrorCode code = r.getException().getMessagingErrorCode();
+                // Xato sababi yozilmasa nosozlikni topib bo'lmaydi (token o'chirilmasa ham).
+                log.warn("FCM token rad etildi: kod={}, xabar={}, token=...{}",
+                        code, r.getException().getMessage(), tail(tokens.get(i)));
                 if (code == MessagingErrorCode.UNREGISTERED || code == MessagingErrorCode.INVALID_ARGUMENT) {
                     invalid.add(tokens.get(i));
                 }
@@ -138,6 +141,11 @@ public class PushNotificationService {
             deviceTokenRepository.deleteByTokenIn(invalid);
             log.info("{} ta yaroqsiz FCM token o'chirildi", invalid.size());
         }
+    }
+
+    /** Token'ning oxirgi 8 belgisi — logda to'liq token yozilmasligi uchun. */
+    private String tail(String token) {
+        return token.length() <= 8 ? token : token.substring(token.length() - 8);
     }
 
     /** "Ali Valiyev — 2 ta kitob — 150 000 so'm" ko'rinishidagi qisqa tavsif. */
