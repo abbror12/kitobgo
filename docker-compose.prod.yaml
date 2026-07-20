@@ -35,6 +35,12 @@ services:
     # Faqat localhost — tashqariga nginx (80/443) xizmat qiladi.
     ports:
       - "127.0.0.1:8080:8080"
+    # FCM push kaliti. Fayl image ichiga kirmaydi (.dockerignore'da, maxfiy),
+    # shuning uchun serverdan mount qilinadi. /opt/kitobgo/firebase-service-account.json
+    # OLDINDAN yaratilgan bo'lishi shart — aks holda Docker o'sha yo'lda bo'sh
+    # papka yaratadi va FCM ishlamaydi.
+    volumes:
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
     # Konteyner ichidan server (host) mashinasidagi Postgres'ga chiqish uchun —
     # DB_URL'da host.docker.internal ishlatilsa shu kerak (Linux'da).
     extra_hosts:
