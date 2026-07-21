@@ -70,6 +70,7 @@ public class SecurityConfig {
                         // Checkout viloyatlar ro'yxati — ochiq (sayt formasi uchun).
                         .requestMatchers(HttpMethod.GET, "/api/orders/regions").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                         // Buyurtmalarni ko'rish — faqat admin sayti (ADMIN + SUPER_ADMIN).
                         // COURIER/OPERATOR/SMM_MANAGER admin saytiga kira olmaydi — har biri
@@ -95,6 +96,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers("/api/categories/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
