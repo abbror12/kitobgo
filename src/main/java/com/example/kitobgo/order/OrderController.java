@@ -115,6 +115,16 @@ public class OrderController {
         return ResponseEntity.ok(queryService.unrouted(principal.user()));
     }
 
+    /** Mijoz, telefon, order UUID yoki EMU trek-raqami bo'yicha admin qidiruvi. */
+    @GetMapping("/search")
+    public ResponseEntity<PagedResponse<OrderResponseDto>> search(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) UUID operatorId,
+            @RequestParam(required = false) OrderStatus status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(queryService.search(q, operatorId, status, pageable));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponseDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(queryService.getById(id));

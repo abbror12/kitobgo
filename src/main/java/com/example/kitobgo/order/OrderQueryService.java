@@ -9,6 +9,7 @@ import com.example.kitobgo.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -125,6 +126,20 @@ public class OrderQueryService {
             page = orderRepository.findAll(pageable);
         }
         return toDetailedPage(page);
+    }
+
+    /**
+     * Admin qidiruvi: mijoz ismi/telefoni, to'liq buyurtma UUID'si yoki EMU trek-raqami.
+     * operatorId va status ixtiyoriy filtrlar sifatida qidiruv bilan birga ishlaydi.
+     */
+    @Transactional(readOnly = true)
+    public PagedResponse<OrderResponseDto> search(
+            String q,
+            UUID operatorId,
+            OrderStatus status,
+            Pageable pageable) {
+        Specification<Order> spec = OrderSpecifications.withFilters(q, operatorId, status);
+        return toDetailedPage(orderRepository.findAll(spec, pageable));
     }
 
     /**

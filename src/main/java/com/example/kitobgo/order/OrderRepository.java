@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,7 +24,7 @@ import java.util.UUID;
  * graf {@code Pageable} bilan birga ishlatilsa Hibernate sahifalashni xotirada qiladi
  * (HHH90003004 — hamma qator baribir yuklanadi), shu sababli bu ikkisi ataylab ajratilgan.
  */
-public interface OrderRepository extends JpaRepository<Order, UUID> {
+public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecificationExecutor<Order> {
 
     @EntityGraph(Order.DETAIL_GRAPH)
     Optional<Order> findWithItemsById(UUID id);
