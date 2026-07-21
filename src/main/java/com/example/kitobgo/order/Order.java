@@ -45,6 +45,14 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    /** Sayt checkout retry'larini duplicate orderga aylantirmaydigan client kaliti. */
+    @Column(unique = true)
+    private UUID clientRequestId;
+
+    /** Bir kalit boshqa payload bilan qayta ishlatilganini aniqlash uchun SHA-256. */
+    @Column(length = 64)
+    private String clientRequestHash;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "operator_id")
     private User operator;

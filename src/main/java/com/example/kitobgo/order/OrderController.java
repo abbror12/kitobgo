@@ -36,9 +36,14 @@ public class OrderController {
     private final EmuService emuService;
 
     @PostMapping
-    public ResponseEntity<OrderResponseDto> create(@Valid @RequestBody OrderRequestDto requestDto) {
-        OrderResponseDto response = creationService.create(requestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<OrderResponseDto> create(
+            @RequestHeader(name = "Idempotency-Key", required = false) UUID clientRequestId,
+            @Valid @RequestBody OrderRequestDto requestDto) {
+        OrderCreationResult result = creationService.create(requestDto, clientRequestId);
+        HttpStatus responseStatus = result.created() ? HttpStatus.CREATED : HttpStatus.OK;
+        return ResponseEntity.status(responseStatus)
+                .header("Idempotency-Replayed", Boolean.toString(!result.created()))
+                .body(result.order());
     }
 
     /** Checkout uchun viloyatlar ro'yxati (har biriga yetkazish turi bilan). Ochiq. */

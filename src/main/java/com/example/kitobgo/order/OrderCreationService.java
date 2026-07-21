@@ -1,5 +1,6 @@
 package com.example.kitobgo.order;
 
+import com.example.kitobgo.common.ConflictException;
 import com.example.kitobgo.notification.PushNotificationService;
 import com.example.kitobgo.order.assignment.OperatorAssignmentStrategy;
 import com.example.kitobgo.order.dto.OrderItemRequest;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Buyurtma yaratish yo'llari: sayt (checkout) va SMM lead. Har ikkalasi ham qatorlarni
@@ -26,6 +28,7 @@ public class OrderCreationService {
     private final OrderStockService stockService;
     private final OrderDeliveryService deliveryService;
     private final PushNotificationService pushNotificationService;
+    private final OrderIdempotencyLock idempotencyLock;
 
     /**
      * Sayt (checkout) buyurtmasi — ochiq endpoint. Manba {@code WEBSITE}, ayni damda
@@ -33,15 +36,32 @@ public class OrderCreationService {
      * <p>
      * Mijozdan faqat viloyat olinadi — manzilni operator qo'ng'iroqda to'ldiradi.
      * Marshrut ham bu yerda qo'yilmaydi: u tasdiqlanganda viloyatdan avtomatik chiqadi.
-     */
+    */
     @Transactional
-    public OrderResponseDto create(OrderRequestDto dto) {
+    public OrderCreationResult create(OrderRequestDto dto, UUID clientRequestId) {
+        if (clientRequestId == null) {
+            throw new IllegalArgumentException("Idempotency-Key header'i ko'rsatilishi shart");
+        }
         requireItems(dto.items());
+
+        String requestHash = OrderRequestFingerprint.sha256(dto);
+        idempotencyLock.acquire(clientRequestId);
+
+        Order existing = orderRepository.findByClientRequestId(clientRequestId).orElse(null);
+        if (existing != null) {
+            if (!requestHash.equals(existing.getClientRequestHash())) {
+                throw new ConflictException(
+                        "Idempotency-Key boshqa checkout ma'lumoti bilan oldin ishlatilgan");
+            }
+            return new OrderCreationResult(OrderResponseDto.from(existing), false);
+        }
 
         User operator = operatorAssignmentStrategy.assignOperator();
 
         Order order = Order.builder()
                 .operator(operator)
+                .clientRequestId(clientRequestId)
+                .clientRequestHash(requestHash)
                 .source(OrderSource.WEBSITE)
                 .region(dto.region())
                 .customerName(dto.customerName())
@@ -55,7 +75,7 @@ public class OrderCreationService {
         if (saved.getOperator() != null) {
             pushNotificationService.notifyNewOrder(saved.getOperator(), saved);
         }
-        return OrderResponseDto.from(saved);
+        return new OrderCreationResult(OrderResponseDto.from(saved), true);
     }
 
     /**

@@ -28,3 +28,5 @@ databaseChangeLog:
       file: db/changelog/0012-products-catalog-fields.sql
   - include:
       file: db/changelog/0013-product-categories.sql
+  - include:
+      file: db/changelog/0014-orders-idempotency.sql

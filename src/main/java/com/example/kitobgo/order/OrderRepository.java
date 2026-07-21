@@ -29,6 +29,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
     @EntityGraph(Order.DETAIL_GRAPH)
     Optional<Order> findWithItemsById(UUID id);
 
+    @EntityGraph(Order.DETAIL_GRAPH)
+    Optional<Order> findByClientRequestId(UUID clientRequestId);
+
     /** 2-bosqich: sahifadagi buyurtmalarni to'liq graf bilan yuklash. */
     @EntityGraph(Order.DETAIL_GRAPH)
     List<Order> findWithDetailByIdIn(Collection<UUID> ids);
