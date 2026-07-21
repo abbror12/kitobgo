@@ -20,10 +20,14 @@ public final class ProductSpecifications {
             Integer minPrice,
             Integer maxPrice,
             Boolean inStock,
-            Boolean hasDiscount) {
+            Boolean hasDiscount,
+            Long categoryId) {
 
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            // Ochiq qidiruvga DRAFT va ARCHIVED mahsulotlar chiqmaydi.
+            predicates.add(cb.equal(root.get("status"), ProductStatus.ACTIVE));
 
             // Kalit so'z: title yoki author bo'yicha (harf-registrsiz, qismiy).
             if (q != null && !q.isBlank()) {
@@ -61,6 +65,11 @@ public final class ProductSpecifications {
                         cb.lessThan(root.get("discountPrice"), root.get("price"))
                 );
                 predicates.add(hasDiscount ? discounted : cb.not(discounted));
+            }
+
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.join("categories").get("id"), categoryId));
+                query.distinct(true);
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

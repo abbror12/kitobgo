@@ -1,5 +1,6 @@
 package com.example.kitobgo.product;
 
+import com.example.kitobgo.common.ConflictException;
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.common.PagedResponse;
 import com.example.kitobgo.product.dto.ProductRequestDto;
@@ -14,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,20 +26,28 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public ProductResponseDto create(ProductRequestDto dto) {
         validateDiscount(dto.price(), dto.discountPrice());
+        String isbn = normalizeIsbn(dto.isbn());
+        validateUniqueIsbn(isbn, null);
 
         Product product = Product.builder()
                 .title(dto.title())
                 .description(dto.description())
                 .author(dto.author())
+                .isbn(isbn)
+                .publisher(dto.publisher())
+                .language(normalizeLanguage(dto.language()))
+                .status(dto.status() != null ? dto.status() : ProductStatus.ACTIVE)
                 .price(dto.price())
                 .discountPrice(dto.discountPrice())
                 .pageCount(dto.pageCount())
                 .publishedYear(dto.publishedYear())
                 .stockQuantity(dto.stockQuantity())
+                .categories(resolveCategories(dto.categoryIds()))
                 .build();
 
         if (dto.imageUrls() != null) {
@@ -56,15 +69,27 @@ public class ProductService {
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
 
         validateDiscount(dto.price(), dto.discountPrice());
+        String isbn = normalizeIsbn(dto.isbn());
+        validateUniqueIsbn(isbn, id);
 
         product.setTitle(dto.title());
         product.setDescription(dto.description());
         product.setAuthor(dto.author());
+        product.setIsbn(isbn);
+        product.setPublisher(dto.publisher());
+        product.setLanguage(normalizeLanguage(dto.language()));
+        if (dto.status() != null) {
+            product.changeStatus(dto.status());
+        }
         product.setPrice(dto.price());
         product.setDiscountPrice(dto.discountPrice());
         product.setPageCount(dto.pageCount());
         product.setPublishedYear(dto.publishedYear());
         product.setStockQuantity(dto.stockQuantity());
+        if (dto.categoryIds() != null) {
+            product.getCategories().clear();
+            product.getCategories().addAll(resolveCategories(dto.categoryIds()));
+        }
 
         return ProductResponseDto.from(productRepository.save(product));
     }
@@ -84,6 +109,15 @@ public class ProductService {
         return ProductResponseDto.from(productRepository.save(product));
     }
 
+    /** DRAFT, ACTIVE va ARCHIVED holatlari orasida o'tkazadi; ARCHIVED -> ACTIVE ham shu yerda. */
+    @Transactional
+    public ProductResponseDto changeStatus(Long id, ProductStatus status) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Book not found: " + id));
+        product.changeStatus(status);
+        return ProductResponseDto.from(productRepository.save(product));
+    }
+
     /** Chegirma narxi to'g'riligini tekshiradi (null = chegirma yo'q, ruxsat etiladi). */
     private void validateDiscount(Integer price, Integer discountPrice) {
         if (discountPrice == null) {
@@ -95,6 +129,59 @@ public class ProductService {
         if (price == null || discountPrice >= price) {
             throw new IllegalArgumentException("Chegirma narxi asl narxdan past bo'lishi kerak");
         }
+    }
+
+    /** ISBN tire va bo'shliqlarsiz saqlanadi; ISBN-10 hamda ISBN-13 qabul qilinadi. */
+    private String normalizeIsbn(String isbn) {
+        if (isbn == null || isbn.isBlank()) {
+            return null;
+        }
+        String normalized = isbn.replaceAll("[-\\s]", "").toUpperCase(Locale.ROOT);
+        if (!normalized.matches("(?:\\d{13}|\\d{9}[\\dX])")) {
+            throw new IllegalArgumentException("ISBN-10 yoki ISBN-13 formati noto'g'ri");
+        }
+        return normalized;
+    }
+
+    /** Til ISO 639 kodi ko'rinishida saqlanadi: uz, ru, en va hokazo. */
+    private String normalizeLanguage(String language) {
+        if (language == null || language.isBlank()) {
+            return null;
+        }
+        String normalized = language.trim().toLowerCase(Locale.ROOT);
+        if (!normalized.matches("[a-z]{2,3}")) {
+            throw new IllegalArgumentException("Til kodi 2 yoki 3 ta lotin harfidan iborat bo'lishi kerak");
+        }
+        return normalized;
+    }
+
+    private void validateUniqueIsbn(String isbn, Long currentProductId) {
+        if (isbn == null) {
+            return;
+        }
+        boolean exists = currentProductId == null
+                ? productRepository.existsByIsbn(isbn)
+                : productRepository.existsByIsbnAndIdNot(isbn, currentProductId);
+        if (exists) {
+            throw new ConflictException("Bu ISBN bilan mahsulot allaqachon mavjud: " + isbn);
+        }
+    }
+
+    private Set<Category> resolveCategories(Set<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return new LinkedHashSet<>();
+        }
+        List<Category> categories = categoryRepository.findAllById(categoryIds);
+        Set<Long> foundIds = categories.stream()
+                .map(Category::getId)
+                .collect(Collectors.toSet());
+        Set<Long> missingIds = categoryIds.stream()
+                .filter(id -> !foundIds.contains(id))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        if (!missingIds.isEmpty()) {
+            throw new NotFoundException("Categories not found: " + missingIds);
+        }
+        return new LinkedHashSet<>(categories);
     }
 
     /**
@@ -160,29 +247,27 @@ public class ProductService {
         fileStorageService.deleteAfterCommit(image.getUrl());
     }
 
-    /**
-     * Kitobni o'chiradi. cascade + orphanRemoval tufayli unga tegishli rasmlar ham o'chadi;
-     * rasm fayllari commit'dan keyin diskdan tozalanadi.
-     */
+    /** Mahsulot va rasmlarini o'chirmasdan ARCHIVED holatiga o'tkazadi. */
     @Transactional
-    public void delete(Long id) {
+    public void archive(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
-        product.getImages().forEach(img -> fileStorageService.deleteAfterCommit(img.getUrl()));
-        productRepository.delete(product);
+        product.archive();
+        productRepository.save(product);
     }
 
     @Transactional(readOnly = true)
     public ProductResponseDto getById(Long id) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
         return ProductResponseDto.from(product);
     }
 
-    /** Mahsulotlar sahifasi (katalog). Filtrsiz to'liq ro'yxat o'rniga sahifalab beriladi. */
+    /** Ochiq katalogda faqat ACTIVE mahsulotlar sahifalab beriladi. */
     @Transactional(readOnly = true)
     public PagedResponse<ProductResponseDto> getAll(Pageable pageable) {
-        return PagedResponse.from(productRepository.findAll(pageable).map(ProductResponseDto::from));
+        return PagedResponse.from(productRepository.findAllByStatus(ProductStatus.ACTIVE, pageable)
+                .map(ProductResponseDto::from));
     }
 
     /**
@@ -196,10 +281,11 @@ public class ProductService {
             Integer maxPrice,
             Boolean inStock,
             Boolean hasDiscount,
+            Long categoryId,
             Pageable pageable) {
 
         Specification<Product> spec =
-                ProductSpecifications.withFilters(q, minPrice, maxPrice, inStock, hasDiscount);
+                ProductSpecifications.withFilters(q, minPrice, maxPrice, inStock, hasDiscount, categoryId);
 
         Page<ProductResponseDto> page = productRepository.findAll(spec, pageable)
                 .map(ProductResponseDto::from);

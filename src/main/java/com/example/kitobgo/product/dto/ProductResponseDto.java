@@ -1,7 +1,9 @@
 package com.example.kitobgo.product.dto;
 
 import com.example.kitobgo.product.Product;
+import com.example.kitobgo.product.ProductStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record ProductResponseDto(
@@ -9,6 +11,10 @@ public record ProductResponseDto(
         String title,
         String description,
         String author,
+        String isbn,
+        String publisher,
+        String language,
+        ProductStatus status,
         Integer price,
         Integer discountPrice,
         boolean hasDiscount,
@@ -17,30 +23,37 @@ public record ProductResponseDto(
         Integer publishedYear,
         Integer stockQuantity,
         boolean inStock,
-        List<ProductImageResponseDto> images
+        List<CategoryResponseDto> categories,
+        List<ProductImageResponseDto> images,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
     public static ProductResponseDto from(Product product) {
-        Integer stock = product.getStockQuantity();
-        Integer price = product.getPrice();
-        Integer discountPrice = product.getDiscountPrice();
-        // Chegirma bor: chegirma narxi kiritilgan va asl narxdan past bo'lsa.
-        boolean hasDiscount = discountPrice != null && price != null && discountPrice < price;
         return new ProductResponseDto(
                 product.getId(),
                 product.getTitle(),
                 product.getDescription(),
                 product.getAuthor(),
-                price,
-                discountPrice,
-                hasDiscount,
+                product.getIsbn(),
+                product.getPublisher(),
+                product.getLanguage(),
+                product.getStatus(),
+                product.getPrice(),
+                product.getDiscountPrice(),
+                product.hasDiscount(),
                 product.getRating(),
                 product.getPageCount(),
                 product.getPublishedYear(),
-                stock,
-                stock != null && stock > 0,
+                product.getStockQuantity(),
+                product.isInStock(),
+                product.getCategories().stream()
+                        .map(CategoryResponseDto::from)
+                        .toList(),
                 product.getImages().stream()
                         .map(ProductImageResponseDto::from)
-                        .toList()
+                        .toList(),
+                product.getCreatedAt(),
+                product.getUpdatedAt()
         );
     }
 }

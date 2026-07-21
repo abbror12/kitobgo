@@ -4,6 +4,7 @@ import com.example.kitobgo.common.PagedResponse;
 import com.example.kitobgo.product.dto.DiscountRequestDto;
 import com.example.kitobgo.product.dto.ProductRequestDto;
 import com.example.kitobgo.product.dto.ProductResponseDto;
+import com.example.kitobgo.product.dto.ProductStatusRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -52,6 +53,14 @@ public class ProductController {
         return ResponseEntity.ok(productService.setDiscount(id, requestDto.discountPrice()));
     }
 
+    /** Mahsulot statusini o'zgartiradi, jumladan ARCHIVED mahsulotni ACTIVE holatiga qaytaradi. */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ProductResponseDto> changeStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductStatusRequestDto requestDto) {
+        return ResponseEntity.ok(productService.changeStatus(id, requestDto.status()));
+    }
+
     /** Berilgan rasmni birinchi (muqova) qilib qo'yadi. */
     @PutMapping("/{id}/images/{imageId}/primary")
     public ResponseEntity<ProductResponseDto> makeImagePrimary(
@@ -79,9 +88,10 @@ public class ProductController {
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(required = false) Boolean inStock,
             @RequestParam(required = false) Boolean hasDiscount,
+            @RequestParam(required = false) Long categoryId,
             @PageableDefault(size = 12, sort = "title") Pageable pageable) {
         return ResponseEntity.ok(
-                productService.search(q, minPrice, maxPrice, inStock, hasDiscount, pageable));
+                productService.search(q, minPrice, maxPrice, inStock, hasDiscount, categoryId, pageable));
     }
 
     /** Kitobning bitta rasmini o'chiradi. */
@@ -93,9 +103,10 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Mahsulotni fizik o'chirmasdan ARCHIVED holatiga o'tkazadi. */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        productService.delete(id);
+    public ResponseEntity<Void> archive(@PathVariable Long id) {
+        productService.archive(id);
         return ResponseEntity.noContent().build();
     }
 }
