@@ -1,0 +1,118 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "text": "DOWN" }, "1": { "color": "green", "text": "UP" } }, "type": "value" }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 0 },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "editorMode": "code", "expr": "up{job=\"kitobgo\"}", "instant": true, "legendFormat": "Backend", "range": false, "refId": "A" }],
+      "title": "Backend holati",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 8, "x": 4, "y": 0 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "editorMode": "code", "expr": "sum(rate(http_server_requests_seconds_count{job=\"kitobgo\"}[5m])) or sum(rate(http_server_request_duration_seconds_count{job=\"kitobgo\"}[5m]))", "legendFormat": "requests/s", "range": true, "refId": "A" }],
+      "title": "HTTP so'rovlar tezligi",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 8, "x": 12, "y": 0 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "single", "sort": "none" } },
+      "targets": [{ "editorMode": "code", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job=\"kitobgo\"}[5m]))) or histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{job=\"kitobgo\"}[5m])))", "legendFormat": "p95", "range": true, "refId": "A" }],
+      "title": "HTTP p95 javob vaqti",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }, "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 0 },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [{ "editorMode": "code", "expr": "100 * sum(rate(http_server_requests_seconds_count{job=\"kitobgo\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=\"kitobgo\"}[5m])), 0.001) or 100 * sum(rate(http_server_request_duration_seconds_count{job=\"kitobgo\",http_response_status_code=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_request_duration_seconds_count{job=\"kitobgo\"}[5m])), 0.001)", "instant": true, "legendFormat": "5xx", "range": false, "refId": "A" }],
+      "title": "HTTP 5xx",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 5 },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(jvm_memory_used_bytes{job=\"kitobgo\",area=\"heap\"})", "legendFormat": "used", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(jvm_memory_max_bytes{job=\"kitobgo\",area=\"heap\"})", "legendFormat": "max", "range": true, "refId": "B" }
+      ],
+      "title": "JVM heap xotirasi",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "min": 0, "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 5 },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "process_cpu_usage{job=\"kitobgo\"}", "legendFormat": "process", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "system_cpu_usage{job=\"kitobgo\"}", "legendFormat": "system", "range": true, "refId": "B" }
+      ],
+      "title": "CPU ishlatilishi",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "min": 0, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 5 },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "hikaricp_connections_active{job=\"kitobgo\"}", "legendFormat": "active", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "hikaricp_connections_idle{job=\"kitobgo\"}", "legendFormat": "idle", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "hikaricp_connections_pending{job=\"kitobgo\"}", "legendFormat": "pending", "range": true, "refId": "C" }
+      ],
+      "title": "PostgreSQL connection pool",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "min": 0, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 13 },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "editorMode": "code", "expr": "sum(increase(kitobgo_push_outbox_enqueued_total[5m]))", "legendFormat": "queued", "range": true, "refId": "A" },
+        { "editorMode": "code", "expr": "sum(increase(kitobgo_push_outbox_sent_total[5m]))", "legendFormat": "sent", "range": true, "refId": "B" },
+        { "editorMode": "code", "expr": "sum(increase(kitobgo_push_outbox_failed_total[5m]))", "legendFormat": "failed/retry", "range": true, "refId": "C" }
+      ],
+      "title": "Push notification outbox (5 daqiqa)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["kitobgo", "spring-boot"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Backend Overview",
+  "uid": "kitobgo-backend-overview",
+  "version": 1,
+  "weekStart": ""
+}
