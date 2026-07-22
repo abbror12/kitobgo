@@ -8,13 +8,15 @@ Actuator asosiy HTTP portdan ajratilgan `8081` management portda ishlaydi:
 - `/actuator/metrics`
 - `/actuator/prometheus`
 
-Prometheus va Grafana'ni production compose bilan birlashtirib ishga tushirish:
+Prometheus va Grafana yagona production Compose ichiga kiritilgan. Ishga tushirish:
 
 ```bash
-docker compose -f docker-compose.prod.yaml -f docker-compose.observability.yaml up -d
+docker compose -f docker-compose.prod.yaml up -d
 ```
 
-Portlar faqat localhost'ga ochiladi: Prometheus `9090`, Grafana `3000`.
+Portlar faqat localhost'ga ochiladi: Prometheus default `9090`, Grafana default
+`3001`. Ularni `.env` ichidagi `PROMETHEUS_PORT` va `GRAFANA_PORT` bilan almashtirish
+mumkin. `GRAFANA_ADMIN_PASSWORD` majburiy.
 
 ## Load test
 

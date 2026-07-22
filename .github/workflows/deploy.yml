@@ -8,7 +8,7 @@
 #   SERVER_PORT     — SSH port (ixtiyoriy, default 22)
 #
 # Serverda oldindan tayyor bo'lishi kerak: Docker + /opt/kitobgo papkasida
-# docker-compose.prod.yaml va to'ldirilgan .env (qarang docker-compose.prod.yaml izohi).
+# to'ldirilgan .env va Firebase kaliti. Compose hamda ops/ har deployda ko'chiriladi.
 name: Deploy (dev)
 
 on:
@@ -77,6 +77,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Serverda git repository yo'q. Maxfiy bo'lmagan deploy konfiguratsiyasi har safar
+      # GitHub'dan nusxalanadi; mavjud .env va firebase-service-account.json tegilmaydi.
+      - name: Compose va monitoring konfiguratsiyasini serverga nusxalash
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          passphrase: ${{ secrets.SERVER_SSH_PASSPHRASE }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: "docker-compose.prod.yaml,ops"
+          target: "/opt/kitobgo"
+          overwrite: true
+
       - name: Serverda yangilash
         uses: appleboy/ssh-action@v1
         with:
@@ -89,6 +103,6 @@ jobs:
           script: |
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd /opt/kitobgo
-            docker compose -f docker-compose.prod.yaml pull app
+            docker compose -f docker-compose.prod.yaml pull app prometheus grafana
             docker compose -f docker-compose.prod.yaml up -d
             docker image prune -f

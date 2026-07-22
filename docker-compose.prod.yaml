@@ -6,11 +6,12 @@
 #                                    jdbc:postgresql://host.docker.internal:5432/kitobgo
 #
 # Serverda birinchi o'rnatish:
-#   1. /opt/kitobgo papkasiga shu fayl + .env qo'yiladi (.env.example asosida;
+#   1. /opt/kitobgo papkasiga shu fayl + ops/ + .env qo'yiladi (.env.example asosida;
 #      S3_ENDPOINT=http://minio:9000,
 #      S3_PUBLIC_URL=http://<server-ip>:9000/kitobgo bo'lishi kerak!)
 #   2. Postgres'da kitobgo bazasi yaratilgan bo'lsin (sxemani Liquibase o'zi quradi)
-#   3. docker compose -f docker-compose.prod.yaml up -d
+#   3. GRAFANA_ADMIN_PASSWORD ham .env ichida beriladi
+#   4. docker compose -f docker-compose.prod.yaml up -d
 # Keyingi deploylar GitHub Actions orqali avtomatik (dev branch'ga push).
 services:
   minio:
@@ -49,5 +50,36 @@ services:
       minio:
         condition: service_started
 
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    # Monitoring porti tashqariga ochilmaydi; kerak bo'lsa SSH tunnel ishlatiladi.
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD .env da berilishi shart}
+    # Serverda 3000 band bo'lishi mumkinligi sababli default host port 3001.
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./ops/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
 volumes:
   minio-data:
+  prometheus-data:
+  grafana-data:
