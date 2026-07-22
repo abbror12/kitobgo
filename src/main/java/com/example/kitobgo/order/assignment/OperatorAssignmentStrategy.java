@@ -2,6 +2,10 @@ package com.example.kitobgo.order.assignment;
 
 import com.example.kitobgo.user.User;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.IntStream;
+
 /**
  * Buyurtmaga qaysi operator biriktirilishini aniqlaydigan strategiya.
  * <p>
@@ -20,4 +24,12 @@ public interface OperatorAssignmentStrategy {
      *         {@code null} (bunda buyurtma egasiz hovuzda kutadi)
      */
     User assignOperator();
+
+    /** Batch taqsimotida implementatsiya operatorlarni bir marta o'qib qaytarishi mumkin. */
+    default List<User> assignOperators(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(ignored -> assignOperator())
+                .takeWhile(Objects::nonNull)
+                .toList();
+    }
 }

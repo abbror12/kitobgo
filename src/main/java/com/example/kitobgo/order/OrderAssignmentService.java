@@ -10,10 +10,12 @@ import com.example.kitobgo.user.Role;
 import com.example.kitobgo.user.User;
 import com.example.kitobgo.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -30,6 +32,9 @@ public class OrderAssignmentService {
     private final OperatorAssignmentStrategy operatorAssignmentStrategy;
     private final Availability availability;
     private final PushNotificationService pushNotificationService;
+
+    @Value("${app.order.rebalance-batch-size:100}")
+    private int rebalanceBatchSize;
 
     /**
      * Buyurtmaga kuryer biriktiradi.
@@ -97,12 +102,15 @@ public class OrderAssignmentService {
         // 1) Mavjud bo'lmagan operatorlarning NEW buyurtmalarini hovuzga qaytar.
         //    Faqat WEBSITE buyurtmalari — SMM (Instagram/Telegram) buyurtmalari yaratgan
         //    xodimga biriktirilib qoladi, avto-taqsimotga tushmaydi.
-        orderRepository.findNewOrdersOfUnavailableOperators(OrderStatus.NEW, OrderSource.WEBSITE, threshold)
+        orderRepository.lockUnavailableWebsiteOrders(threshold, rebalanceBatchSize)
                 .forEach(order -> order.setOperator(null));
 
         // 2) Hovuzdagilarni mavjud operatorlarga tarqat (round-robin strategiya orqali).
-        for (Order order : orderRepository.findByOperatorIsNullOrderByCreatedAtAsc()) {
-            User operator = operatorAssignmentStrategy.assignOperator();
+        List<Order> orders = orderRepository.lockNextUnassignedBatch(rebalanceBatchSize);
+        List<User> operators = operatorAssignmentStrategy.assignOperators(orders.size());
+        for (int index = 0; index < operators.size(); index++) {
+            Order order = orders.get(index);
+            User operator = operators.get(index);
             if (operator == null) {
                 break;   // hozircha mavjud operator yo'q — hovuzda kutaversin
             }

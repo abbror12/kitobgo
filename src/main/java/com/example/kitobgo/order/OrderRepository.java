@@ -55,7 +55,14 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 
     /** Egasiz (operatorsiz) buyurtmalar hovuzi — eskidan yangiga (FIFO taqsimot uchun). */
-    List<Order> findByOperatorIsNullOrderByCreatedAtAsc();
+    @Query(value = """
+            select * from orders
+            where operator_id is null
+            order by created_at asc
+            for update skip locked
+            limit :batchSize
+            """, nativeQuery = true)
+    List<Order> lockNextUnassignedBatch(@Param("batchSize") int batchSize);
 
     /**
      * Marshrutsiz buyurtmalar — tasdiqlangan, lekin yetkazish turi hali yo'q. Amalda bu
@@ -83,19 +90,21 @@ public interface OrderRepository extends JpaRepository<Order, UUID>, JpaSpecific
      * {@code source} filtri bilan faqat kerakli kanal (WEBSITE) buyurtmalari olinadi —
      * SMM (Instagram/Telegram) buyurtmalari avto-taqsimotga tushmasligi uchun.
      */
-    @Query("""
-            select o from Order o
-            where o.status = :status
-              and o.source = :source
-              and o.operator is not null
-              and (o.operator.online is null
-                   or o.operator.online = false
-                   or o.operator.lastSeenAt is null
-                   or o.operator.lastSeenAt < :threshold)
-            order by o.createdAt asc
-            """)
-    List<Order> findNewOrdersOfUnavailableOperators(
-            @Param("status") OrderStatus status,
-            @Param("source") OrderSource source,
-            @Param("threshold") LocalDateTime threshold);
+    @Query(value = """
+            select o.*
+            from orders o
+            join users u on u.id = o.operator_id
+            where o.status = 'NEW'
+              and o.source = 'WEBSITE'
+              and (u.online is null
+                   or u.online = false
+                   or u.last_seen_at is null
+                   or u.last_seen_at < :threshold)
+            order by o.created_at asc
+            for update of o skip locked
+            limit :batchSize
+            """, nativeQuery = true)
+    List<Order> lockUnavailableWebsiteOrders(
+            @Param("threshold") LocalDateTime threshold,
+            @Param("batchSize") int batchSize);
 }

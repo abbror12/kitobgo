@@ -5,6 +5,8 @@ import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.product.dto.CategoryRequestDto;
 import com.example.kitobgo.product.dto.CategoryResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
+    @CacheEvict(cacheNames = {"categories", "productCatalog"}, allEntries = true)
     public CategoryResponseDto create(CategoryRequestDto dto) {
         String name = normalizeName(dto.name());
         if (categoryRepository.existsByNameIgnoreCase(name)) {
@@ -28,6 +31,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = {"categories", "productCatalog", "productDetails"}, allEntries = true)
     public CategoryResponseDto update(Long id, CategoryRequestDto dto) {
         Category category = findById(id);
         String name = normalizeName(dto.name());
@@ -39,6 +43,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "categories", sync = true)
     public List<CategoryResponseDto> getAll() {
         return categoryRepository.findAll(Sort.by(Sort.Direction.ASC, "name")).stream()
                 .map(CategoryResponseDto::from)

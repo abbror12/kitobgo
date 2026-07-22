@@ -30,3 +30,7 @@ databaseChangeLog:
       file: db/changelog/0013-product-categories.sql
   - include:
       file: db/changelog/0014-orders-idempotency.sql
+  - include:
+      file: db/changelog/0015-performance-indexes.sql
+  - include:
+      file: db/changelog/0016-push-notification-outbox.sql

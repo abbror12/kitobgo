@@ -59,6 +59,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(
+                                "/actuator/health", "/actuator/health/**", "/actuator/prometheus"
+                        ).permitAll()
+                        .requestMatchers("/actuator/**").hasRole("SUPER_ADMIN")
                         // Servlet ERROR dispatch (/error) — @ResponseStatus xatolar sendError orqali
                         // shu yerga qaytadi. Ochilmasa, ochiq endpointlardagi 404/409 kabi xatolar
                         // anonim so'rovda 403 bilan niqoblanadi.

@@ -40,4 +40,22 @@ public class RoundRobinOperatorAssignmentStrategy implements OperatorAssignmentS
         int index = Math.floorMod(nextIndex.getAndIncrement(), operators.size());
         return operators.get(index);
     }
+
+    @Override
+    public List<User> assignOperators(int count) {
+        if (count <= 0) {
+            return List.of();
+        }
+        List<User> operators = userRepository
+                .findByRoleAndOnlineTrueAndLastSeenAtAfterOrderByCreatedAtAscIdAsc(
+                        Role.OPERATOR, availability.threshold());
+        if (operators.isEmpty()) {
+            return List.of();
+        }
+
+        int start = nextIndex.getAndAdd(count);
+        return java.util.stream.IntStream.range(0, count)
+                .mapToObj(offset -> operators.get(Math.floorMod(start + offset, operators.size())))
+                .toList();
+    }
 }

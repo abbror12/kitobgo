@@ -1,4 +1,10 @@
 spring:
+  main:
+    keep-alive: true
+  threads:
+    virtual:
+      # JDK 25 virtual thread'lari opt-in: avval load-test, keyin env orqali yoqing.
+      enabled: ${VIRTUAL_THREADS_ENABLED:false}
   datasource:
     url: jdbc:postgresql://localhost:5433/kitobgo
     username: postgres
@@ -6,9 +12,10 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      # Sxemani endi Liquibase boshqaradi (db/changelog). Hibernate faqat entity'lar
-      # bazaga mosligini tekshiradi — nomuvofiqlik bo'lsa dastur ishga tushmaydi.
       ddl-auto: validate
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 #    properties:
@@ -26,6 +33,21 @@ springdoc:
     tags-sorter: alpha              # teglarni alifbo bo'yicha
   api-docs:
     path: /v3/api-docs              # OpenAPI JSON manzili
+
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: kitobgo
 
 app:
   storage:
@@ -57,3 +79,10 @@ app:
     # Service accounts -> Generate new private key). Fayl topilmasa push o'chirilgan
     # holda ishlayveradi. Production'da env orqali bering, git'ga qo'ymang!
     service-account: ${FCM_SERVICE_ACCOUNT:firebase-service-account.json}
+  notification:
+    outbox:
+      batch-size: ${PUSH_OUTBOX_BATCH_SIZE:50}
+      poll-interval-ms: ${PUSH_OUTBOX_POLL_INTERVAL_MS:1000}
+      max-attempts: ${PUSH_OUTBOX_MAX_ATTEMPTS:8}
+  order:
+    rebalance-batch-size: ${ORDER_REBALANCE_BATCH_SIZE:100}

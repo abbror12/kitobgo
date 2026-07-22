@@ -9,6 +9,7 @@ import com.example.kitobgo.user.dto.CreateUserRequest;
 import com.example.kitobgo.user.dto.UpdateUserRequest;
 import com.example.kitobgo.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +29,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
+    @CacheEvict(cacheNames = "userDetails", allEntries = true)
     public UserResponse create(CreateUserRequest request) {
         assertAssignableRole(request.role());
         assertPhoneAvailable(request.phone(), null);
@@ -70,6 +72,7 @@ public class UserService {
      * Foydalanuvchining asosiy maydonlarini to'liq yangilaydi (parolsiz, PUT semantikasi).
      */
     @Transactional
+    @CacheEvict(cacheNames = "userDetails", allEntries = true)
     public UserResponse update(UUID id, UpdateUserRequest request) {
         User user = getUserOrThrow(id);
         assertNotSuperAdmin(user);
@@ -85,6 +88,7 @@ public class UserService {
 
     /** Adminning foydalanuvchi parolini qayta o'rnatishi. */
     @Transactional
+    @CacheEvict(cacheNames = "userDetails", allEntries = true)
     public UserResponse changePassword(UUID id, ChangePasswordRequest request) {
         User user = getUserOrThrow(id);
         assertNotSuperAdmin(user);
@@ -95,6 +99,7 @@ public class UserService {
 
     /** Foydalanuvchi rolini o'zgartiradi. */
     @Transactional
+    @CacheEvict(cacheNames = "userDetails", allEntries = true)
     public UserResponse changeRole(UUID id, ChangeRoleRequest request) {
         User user = getUserOrThrow(id);
         assertNotSuperAdmin(user);
@@ -105,6 +110,7 @@ public class UserService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "userDetails", allEntries = true)
     public void delete(UUID id) {
         User user = getUserOrThrow(id);
         assertNotSuperAdmin(user);

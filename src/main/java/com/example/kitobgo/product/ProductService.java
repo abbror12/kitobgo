@@ -7,6 +7,8 @@ import com.example.kitobgo.product.dto.ProductRequestDto;
 import com.example.kitobgo.product.dto.ProductResponseDto;
 import com.example.kitobgo.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -29,6 +31,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public ProductResponseDto create(ProductRequestDto dto) {
         validateDiscount(dto.price(), dto.discountPrice());
         String isbn = normalizeIsbn(dto.isbn());
@@ -64,6 +67,7 @@ public class ProductService {
      * Rasmlar bu yerda o'zgartirilmaydi — ular alohida endpointlar orqali boshqariladi.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public ProductResponseDto update(Long id, ProductRequestDto dto) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
@@ -99,6 +103,7 @@ public class ProductService {
      * {@code discountPrice == null} bo'lsa chegirma olib tashlanadi.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public ProductResponseDto setDiscount(Long id, Integer discountPrice) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
@@ -111,6 +116,7 @@ public class ProductService {
 
     /** DRAFT, ACTIVE va ARCHIVED holatlari orasida o'tkazadi; ARCHIVED -> ACTIVE ham shu yerda. */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public ProductResponseDto changeStatus(Long id, ProductStatus status) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
@@ -188,6 +194,7 @@ public class ProductService {
      * Kitobga bir yoki bir nechta rasm faylini yuklab biriktiradi.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public ProductResponseDto addImages(Long productId, List<MultipartFile> files) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
@@ -206,6 +213,7 @@ public class ProductService {
      * Berilgan rasmni birinchi (muqova) qilib qo'yadi va qolganlarini qayta tartiblaydi.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public ProductResponseDto makeImagePrimary(Long productId, Long imageId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
@@ -233,6 +241,7 @@ public class ProductService {
      * orphanRemoval tufayli rasm bazadan, commit'dan keyin esa diskdan ham o'chadi.
      */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public void deleteImage(Long productId, Long imageId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + productId));
@@ -249,6 +258,7 @@ public class ProductService {
 
     /** Mahsulot va rasmlarini o'chirmasdan ARCHIVED holatiga o'tkazadi. */
     @Transactional
+    @CacheEvict(cacheNames = {"productCatalog", "productDetails"}, allEntries = true)
     public void archive(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
@@ -257,6 +267,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "productDetails", key = "#id", sync = true)
     public ProductResponseDto getById(Long id) {
         Product product = productRepository.findByIdAndStatus(id, ProductStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException("Book not found: " + id));
@@ -265,6 +276,7 @@ public class ProductService {
 
     /** Ochiq katalogda faqat ACTIVE mahsulotlar sahifalab beriladi. */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "productCatalog", sync = true)
     public PagedResponse<ProductResponseDto> getAll(Pageable pageable) {
         return PagedResponse.from(productRepository.findAllByStatus(ProductStatus.ACTIVE, pageable)
                 .map(ProductResponseDto::from));
@@ -275,6 +287,7 @@ public class ProductService {
      * Barcha filtrlar ixtiyoriy (null bo'lsa e'tiborsiz qoldiriladi).
      */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "productCatalog", sync = true)
     public PagedResponse<ProductResponseDto> search(
             String q,
             Integer minPrice,
