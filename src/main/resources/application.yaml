@@ -10,12 +10,18 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: SET TIME ZONE 'Asia/Tashkent'
+  jackson:
+    time-zone: Asia/Tashkent
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         default_batch_fetch_size: 50
+        jdbc:
+          time_zone: Asia/Tashkent
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 #    properties:

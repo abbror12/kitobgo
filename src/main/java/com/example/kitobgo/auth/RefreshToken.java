@@ -1,5 +1,6 @@
 package com.example.kitobgo.auth;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,6 +42,6 @@ public class RefreshToken {
 
     @PrePersist
     void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = AppTime.now();
     }
 }

@@ -1,5 +1,6 @@
 package com.example.kitobgo.order.emu;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.common.ConflictException;
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.order.DeliveryMethod;
@@ -69,7 +70,7 @@ public class EmuService {
             throw new ConflictException("Eksport qilinadigan EMU buyurtmasi yo'q");
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AppTime.now();
         for (Order order : orders) {
             order.attachEmuShipment(EmuShipment.builder()
                     .parcelName(EmuParcelName.of(order))

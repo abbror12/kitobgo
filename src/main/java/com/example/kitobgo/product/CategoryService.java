@@ -18,6 +18,7 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
 
     @Transactional
     @CacheEvict(cacheNames = {"categories", "productCatalog"}, allEntries = true)
@@ -40,6 +41,23 @@ public class CategoryService {
         }
         category.setName(name);
         return CategoryResponseDto.from(categoryRepository.save(category));
+    }
+
+    /**
+     * Kategoriyani o'chiradi. Guard: unga biriktirilgan mahsulot bo'lsa o'chirilmaydi
+     * ({@code ConflictException}) — avval mahsulotlarni boshqa kategoriyaga ko'chirish kerak.
+     * Bu DB dagi {@code product_categories_category_fk} (ON DELETE qoidasi yo'q) himoyasini
+     * tushunarli xato bilan takrorlaydi.
+     */
+    @Transactional
+    @CacheEvict(cacheNames = {"categories", "productCatalog", "productDetails"}, allEntries = true)
+    public void delete(Long id) {
+        Category category = findById(id);
+        if (productRepository.existsByCategories_Id(id)) {
+            throw new ConflictException("Kategoriyani o'chirib bo'lmaydi — unga biriktirilgan "
+                    + "mahsulotlar bor: " + category.getName());
+        }
+        categoryRepository.delete(category);
     }
 
     @Transactional(readOnly = true)

@@ -15,6 +15,9 @@ public interface ProductRepository
 
     boolean existsByIsbnAndIdNot(String isbn, Long id);
 
+    /** Kategoriyaga biror mahsulot biriktirilganmi — kategoriyani o'chirishdan oldingi tekshiruv. */
+    boolean existsByCategories_Id(Long categoryId);
+
     Optional<Product> findByIdAndStatus(Long id, ProductStatus status);
 
     Page<Product> findAllByStatus(ProductStatus status, Pageable pageable);

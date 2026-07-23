@@ -1,5 +1,6 @@
 package com.example.kitobgo.notification;
 
+import com.example.kitobgo.common.AppTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -59,7 +60,7 @@ public class PushNotificationOutbox {
 
     @PrePersist
     void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AppTime.now();
         if (createdAt == null) {
             createdAt = now;
         }
@@ -70,14 +71,14 @@ public class PushNotificationOutbox {
 
     public void markProcessed() {
         attempts++;
-        processedAt = LocalDateTime.now();
+        processedAt = AppTime.now();
         lastError = null;
     }
 
     public void markFailed(Exception error) {
         attempts++;
         long delaySeconds = Math.min(300, 1L << Math.min(attempts, 8));
-        availableAt = LocalDateTime.now().plusSeconds(delaySeconds);
+        availableAt = AppTime.now().plusSeconds(delaySeconds);
         String message = error.getMessage() != null ? error.getMessage() : error.getClass().getSimpleName();
         lastError = message.substring(0, Math.min(message.length(), 1000));
     }

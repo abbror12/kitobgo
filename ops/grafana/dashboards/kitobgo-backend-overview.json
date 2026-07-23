@@ -110,7 +110,7 @@
   "templating": { "list": [] },
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
-  "timezone": "browser",
+  "timezone": "Asia/Tashkent",
   "title": "Backend Overview",
   "uid": "kitobgo-backend-overview",
   "version": 1,

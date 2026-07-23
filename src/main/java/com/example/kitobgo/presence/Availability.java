@@ -1,5 +1,6 @@
 package com.example.kitobgo.presence;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.user.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ public class Availability {
 
     /** Shundan eski {@code lastSeenAt} "mavjud emas" hisoblanadi. */
     public LocalDateTime threshold() {
-        return LocalDateTime.now().minusSeconds(heartbeatTimeoutSeconds);
+        return AppTime.now().minusSeconds(heartbeatTimeoutSeconds);
     }
 
     /** Foydalanuvchi ayni damda mavjudmi (online va heartbeat'i tirik). */

@@ -1,5 +1,6 @@
 package com.example.kitobgo.product;
 
+import com.example.kitobgo.common.AppTime;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,6 +31,6 @@ public class ProductImage {
 
     @PrePersist
     void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = AppTime.now();
     }
 }

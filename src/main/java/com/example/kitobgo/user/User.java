@@ -1,5 +1,6 @@
 package com.example.kitobgo.user;
 
+import com.example.kitobgo.common.AppTime;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,6 +47,6 @@ public class User {
 
     @PrePersist
     void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = AppTime.now();
     }
 }

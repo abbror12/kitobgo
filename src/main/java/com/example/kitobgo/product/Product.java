@@ -1,5 +1,6 @@
 package com.example.kitobgo.product;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.common.ConflictException;
 import jakarta.persistence.*;
 import lombok.*;
@@ -164,7 +165,7 @@ public class Product {
 
     @PrePersist
     void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = AppTime.now();
         if (createdAt == null) {
             createdAt = now;
         }
@@ -176,6 +177,6 @@ public class Product {
 
     @PreUpdate
     void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = AppTime.now();
     }
 }
