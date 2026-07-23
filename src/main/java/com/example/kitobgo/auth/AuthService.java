@@ -1,5 +1,6 @@
 package com.example.kitobgo.auth;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.auth.dto.AuthResponse;
 import com.example.kitobgo.auth.dto.LoginRequest;
 import com.example.kitobgo.auth.dto.RefreshRequest;
@@ -45,7 +46,7 @@ public class AuthService {
         User user = principal.user();
 
         // Foydalanuvchining muddati o'tgan eski tokenlarini tozalab ketamiz.
-        refreshTokenRepository.deleteByUserAndExpiresAtBefore(user, LocalDateTime.now());
+        refreshTokenRepository.deleteByUserAndExpiresAtBefore(user, AppTime.now());
 
         return AuthResponse.bearer(jwtService.generateToken(principal), issueRefreshToken(user));
     }
@@ -62,7 +63,7 @@ public class AuthService {
 
         refreshTokenRepository.delete(stored);
 
-        if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (stored.getExpiresAt().isBefore(AppTime.now())) {
             throw new UnauthorizedException("Refresh token muddati tugagan, qaytadan kiring");
         }
 
@@ -89,7 +90,7 @@ public class AuthService {
         refreshTokenRepository.save(RefreshToken.builder()
                 .token(token)
                 .user(user)
-                .expiresAt(LocalDateTime.now().plusSeconds(refreshExpirationMs / 1000))
+                .expiresAt(AppTime.now().plusSeconds(refreshExpirationMs / 1000))
                 .build());
         return token;
     }

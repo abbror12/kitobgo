@@ -1,5 +1,6 @@
 package com.example.kitobgo.order.emu;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.order.Order;
 import jakarta.persistence.*;
 import lombok.*;
@@ -49,6 +50,6 @@ public class EmuShipment {
 
     @PrePersist
     void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = AppTime.now();
     }
 }

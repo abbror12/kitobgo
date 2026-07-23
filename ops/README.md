@@ -18,6 +18,10 @@ Portlar faqat localhost'ga ochiladi: Prometheus default `9090`, Grafana default
 `3001`. Ularni `.env` ichidagi `PROMETHEUS_PORT` va `GRAFANA_PORT` bilan almashtirish
 mumkin. `GRAFANA_ADMIN_PASSWORD` majburiy.
 
+Grafana birinchi ishga tushganda `Kitobgo / Backend Overview` dashboardini avtomatik
+yaratadi. Unda backend holati, HTTP tezlik/p95/5xx, JVM xotirasi, CPU, HikariCP va
+push outbox metrikalari ko'rsatiladi.
+
 ## Load test
 
 Backend ishga tushgach katalog smoke testi:

@@ -34,3 +34,5 @@ databaseChangeLog:
       file: db/changelog/0015-performance-indexes.sql
   - include:
       file: db/changelog/0016-push-notification-outbox.sql
+  - include:
+      file: db/changelog/0017-uzbekistan-time.sql

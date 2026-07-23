@@ -1,5 +1,6 @@
 package com.example.kitobgo.notification;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -39,12 +40,12 @@ public class DeviceToken {
 
     @PrePersist
     void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = AppTime.now();
         this.updatedAt = this.createdAt;
     }
 
     @PreUpdate
     void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = AppTime.now();
     }
 }

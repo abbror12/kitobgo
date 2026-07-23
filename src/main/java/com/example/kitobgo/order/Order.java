@@ -1,5 +1,6 @@
 package com.example.kitobgo.order;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.order.emu.EmuShipment;
 import com.example.kitobgo.user.User;
 import jakarta.persistence.*;
@@ -156,7 +157,7 @@ public class Order {
 
     @PrePersist
     void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = AppTime.now();
         if (this.status == null) {
             this.status = OrderStatus.NEW;
         }
@@ -190,7 +191,7 @@ public class Order {
                 .order(this)
                 .status(newStatus)
                 .changedBy(actor)
-                .changedAt(LocalDateTime.now())
+                .changedAt(AppTime.now())
                 .build());
     }
 }

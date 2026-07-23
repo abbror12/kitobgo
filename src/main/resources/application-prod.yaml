@@ -41,6 +41,9 @@ spring:
       validation-timeout: ${DB_VALIDATION_TIMEOUT_MS:1000}
       idle-timeout: ${DB_IDLE_TIMEOUT_MS:600000}
       max-lifetime: ${DB_MAX_LIFETIME_MS:1800000}
+      connection-init-sql: SET TIME ZONE 'Asia/Tashkent'
+  jackson:
+    time-zone: Asia/Tashkent
   jpa:
     hibernate:
       ddl-auto: validate
@@ -48,6 +51,8 @@ spring:
     properties:
       hibernate:
         default_batch_fetch_size: 50
+        jdbc:
+          time_zone: Asia/Tashkent
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   servlet:

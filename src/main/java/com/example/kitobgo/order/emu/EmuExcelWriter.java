@@ -1,5 +1,6 @@
 package com.example.kitobgo.order.emu;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.order.Order;
 import com.example.kitobgo.order.OrderItem;
 import com.example.kitobgo.order.Region;
@@ -49,7 +50,7 @@ public class EmuExcelWriter {
             }
 
             workbook.write(out);
-            return new ExcelFile("emu-" + LocalDate.now().format(FILE_DATE) + ".xlsx", out.toByteArray());
+            return new ExcelFile("emu-" + AppTime.today().format(FILE_DATE) + ".xlsx", out.toByteArray());
         } catch (IOException e) {
             throw new UncheckedIOException("EMU Excel faylini yozib bo'lmadi", e);
         }

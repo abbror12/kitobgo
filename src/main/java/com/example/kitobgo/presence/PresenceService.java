@@ -1,5 +1,6 @@
 package com.example.kitobgo.presence;
 
+import com.example.kitobgo.common.AppTime;
 import com.example.kitobgo.common.NotFoundException;
 import com.example.kitobgo.order.OrderAssignmentService;
 import com.example.kitobgo.user.Role;
@@ -33,7 +34,7 @@ public class PresenceService {
         User user = load(userId);
         user.setOnline(online);
         if (online) {
-            user.setLastSeenAt(LocalDateTime.now());
+            user.setLastSeenAt(AppTime.now());
         }
         userRepository.save(user);
         afterPresenceChange(user);
@@ -44,7 +45,7 @@ public class PresenceService {
     @Transactional
     public void heartbeat(UUID userId) {
         User user = load(userId);
-        user.setLastSeenAt(LocalDateTime.now());
+        user.setLastSeenAt(AppTime.now());
         userRepository.save(user);
         afterPresenceChange(user);
     }
